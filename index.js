@@ -9,8 +9,12 @@ app.use(cors());
 
 var config = require('./config.js');
 
+// ------------------------------------- //
+//              User Table               //
+// ------------------------------------- //
+
 // GET all Users
-app.get('/allusers', function (req, res) {
+app.get('/all-users', function (req, res) {
 
   sql.connect(config, function (err) {
 
@@ -50,6 +54,10 @@ app.get('/user/:userId', function(req, res) {
   });
 
 });
+
+// ------------------------------------- //
+//          Appointment Table            //
+// ------------------------------------- //
 
 // GET Appointment by PairId
 app.get('/appointment/:PairId', function(req, res) {
