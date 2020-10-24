@@ -2,6 +2,8 @@
 Below is detailed information on accessing or posting data to the API, broken up by database table.
 If a route is bolded in the section, it has been implemented. Italics are planned but not working yet.
 
+**PLEASE NOTE**: Database stores times in UTC.
+
 ## Appointment Table
 A table containing appointments scheduled between a mentor/mentee pair.
 
@@ -14,14 +16,14 @@ A table containing appointments scheduled between a mentor/mentee pair.
 * LastUpdate (smalldatetime)
 
 ### Appointment GET
-*/all-appointments* - Returns all appointments in table.
+**/all-appointments** - Returns all appointments in table.
 
 **/appointment/:PairId** - Returns all appointments between specified pair.
 
 ### Appointment POST
-*/create-appointment* - Provide PairId, ScheduledAt.
+**/create-appointment** - Provide PairId, ScheduledAt.
 
-*/update-appointment-status* - Update Status with acceptable parameter.
+**/update-appointment-status** - Provide Id, Status.
 
 ## AppointmentSummary Table
 A table containing summaries written for a particular appointment by a certain user.
