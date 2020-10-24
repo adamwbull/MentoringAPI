@@ -51,6 +51,29 @@ app.get('/user/:userId', function(req, res) {
 
 });
 
+// GET Appointment by PairId
+app.get('/appointment/:PairId', function(req, res) {
+
+  var pairId = req.params.PairId;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input('input', sql.Int, pairId)
+    .query('select * from [Appointment] where PairId=@input', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
 var server = app.listen(process.env.PORT || 3000, function () {
   var port = server.address().port;
   console.log("App live on port", port);
