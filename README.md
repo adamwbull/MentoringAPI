@@ -2,10 +2,10 @@
 Below is detailed information on accessing or posting data to the API, broken up by database table.
 If a route is bolded in the section, it has been implemented. Italics are planned but not working yet.
 
-### Appointment Table
+## Appointment Table
 A table containing appointments scheduled between a mentor/mentee pair.
 
-#### Appointment Structure
+### Appointment Structure
 * Id (PK, int)
 * PairId (int)
 * ScheduledAt (smalldatetime)
@@ -13,20 +13,20 @@ A table containing appointments scheduled between a mentor/mentee pair.
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
-#### Appointment GET
+### Appointment GET
 */all-appointments* - Returns all appointments in table.
 
 **/appointment/:PairId** - Returns all appointments between specified pair.
 
-#### Appointment POST
+### Appointment POST
 */create-appointment* - Provide PairId, ScheduledAt.
 
-*/update-appointment-status* - Update Status with acceptable parameter. LastUpdate handled by server.
+*/update-appointment-status* - Update Status with acceptable parameter.
 
-### AppointmentSummary Table
+## AppointmentSummary Table
 A table containing summaries written for a particular appointment by a certain user.
 
-#### AppointmentSummary Structure
+### AppointmentSummary Structure
 * Id (PK, int)
 * AppointmentId (int)
 * SummaryText (nvarchar(max))
@@ -35,40 +35,40 @@ A table containing summaries written for a particular appointment by a certain u
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
-#### AppointmentSummary GET
+### AppointmentSummary GET
 */summary/user/:UserId* - Returns all summaries written by a user.
 
 */summary/appointment/:AppointmentId* - Returns all summaries for a particular meeting.
 
-#### AppointmentSummary POST
+### AppointmentSummary POST
 */create-summary* - Provide AppointmentId, SummaryText, UserId.
 
 */update-summary* - Provide AppointmentId, SummaryText, UserId.
 
-### Pair Table
+## Pair Table
 A table containing mentor/mentee pairs.
 
-#### Pair Structure
+### Pair Structure
 * Id (PK, int)
 * MentorId (int)
 * MenteeId (int)
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
-#### Pair GET
+### Pair GET
 */pair/mentor/:MentorId* - Returns Pair by MentorId.
 
 */pair/mentee/:MenteeId* - Returns Pair by MenteeId.
 
-#### Pair POST
+### Pair POST
 */create-pair* - Provide MentorId, MenteeId.
 
 */delete-pair* - Provide MentorId, MenteeId.
 
-### Topic Table
+## Topic Table
 A table containing topics for meeting discussions.
 
-#### Topic Structure
+### Topic Structure
 * Id (PK, int)
 * PostedBy (int)
 * DueDate (smalldatetime)
@@ -77,18 +77,18 @@ A table containing topics for meeting discussions.
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
-#### Topic GET
+### Topic GET
 */current-topic* - Returns the most recently created topic.
 
 */topic/:Id* - Returns topic by Id.
 
-#### Topic POST
+### Topic POST
 */create-topic* - Provide PostedBy, DueDate, Title, Description.
 
-### User Table
+## User Table
 A table containing user profile information.
 
-#### User Structure
+### User Structure
 * Id (PK, int)
 * Email (nvarchar(256))
 * FirstName (nvarchar(30))
@@ -96,19 +96,19 @@ A table containing user profile information.
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
-#### User GET
+### User GET
 **/all-users** - Returns all users in table.
 **/user/:Id** - Returns user by Id.
 
-#### User POST
+### User POST
 */create-user* - Provide Email, FirstName, LastName.
 
 */delete-user* - Provide Id, Email.
 
-### UserContact Table
+## UserContact Table
 A table containing contact info for users.
 
-#### UserContact Structure
+### UserContact Structure
 * Id (PK, int)
 * UserId (int)
 * ContactValue (nvarchar(max))
@@ -116,10 +116,10 @@ A table containing contact info for users.
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
-#### UserContact GET
+### UserContact GET
 */contact/:Id* - Returns all contact info for a user.
 
-#### UserContact POST
+### UserContact POST
 */create-contact* - Provide UserId, ContactValue, ContactType.
 
 */update-contact* - Provide UserId, ContactValue, ContactType.
