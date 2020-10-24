@@ -15,10 +15,12 @@ A table containing appointments scheduled between a mentor/mentee pair.
 
 #### Appointment GET
 */all-appointments* - Returns all appointments in table.
+
 **/appointment/:PairId** - Returns all appointments between specified pair.
 
 #### Appointment POST
 */create-appointment* - Provide PairId, ScheduledAt.
+
 */update-appointment-status* - Update Status with acceptable parameter. LastUpdate handled by server.
 
 ### AppointmentSummary Table
@@ -35,10 +37,12 @@ A table containing summaries written for a particular appointment by a certain u
 
 #### AppointmentSummary GET
 */summary/user/:UserId* - Returns all summaries written by a user.
+
 */summary/appointment/:AppointmentId* - Returns all summaries for a particular meeting.
 
 #### AppointmentSummary POST
 */create-summary* - Provide AppointmentId, SummaryText, UserId.
+
 */update-summary* - Provide AppointmentId, SummaryText, UserId.
 
 ### Pair Table
@@ -53,10 +57,12 @@ A table containing mentor/mentee pairs.
 
 #### Pair GET
 */pair/mentor/:MentorId* - Returns Pair by MentorId.
+
 */pair/mentee/:MenteeId* - Returns Pair by MenteeId.
 
 #### Pair POST
 */create-pair* - Provide MentorId, MenteeId.
+
 */delete-pair* - Provide MentorId, MenteeId.
 
 ### Topic Table
@@ -73,6 +79,7 @@ A table containing topics for meeting discussions.
 
 #### Topic GET
 */current-topic* - Returns the most recently created topic.
+
 */topic/:Id* - Returns topic by Id.
 
 #### Topic POST
@@ -95,6 +102,7 @@ A table containing user profile information.
 
 #### User POST
 */create-user* - Provide Email, FirstName, LastName.
+
 */delete-user* - Provide Id, Email.
 
 ### UserContact Table
@@ -113,4 +121,5 @@ A table containing contact info for users.
 
 #### UserContact POST
 */create-contact* - Provide UserId, ContactValue, ContactType.
+
 */update-contact* - Provide UserId, ContactValue, ContactType.
