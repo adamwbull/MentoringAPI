@@ -1,6 +1,7 @@
 # MentoringAPI Documentation
 Below is detailed information on accessing or posting data to the API, broken up by database table.
-If a route is bolded in the section, it has been implemented. Italics are planned but not working yet.
+
+If a route is bolded in the sections below, it has been implemented. Italics are planned but not up and running yet. Current web address is **mshipapp.loca.lt**
 
 **PLEASE NOTE**: Database stores times in UTC.
 
