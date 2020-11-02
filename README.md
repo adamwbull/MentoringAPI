@@ -35,18 +35,23 @@ A table containing summaries written for a particular appointment by a certain u
 * SummaryText (nvarchar(max))
 * UserId (int)
 * Status (nvarchar(10)) Should be *Submitted*, or *Edited*.
+* PairId (int)
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
 ### AppointmentSummary GET
-*/summary/user/:UserId* - Returns all summaries written by a user.
+**/all-summaries** - Returns all submitted summaries that are PrivacyAccepted.
 
-*/summary/appointment/:AppointmentId* - Returns all summaries for a particular meeting.
+**/summary/pair/:PairId** - Returns all summaries written by members of a certain pair.
+
+**/summary/user/:UserId** - Returns all summaries written by a user.
+
+**/summary/appointment/:AppointmentId** - Returns all summaries for a particular meeting.
 
 ### AppointmentSummary POST
-*/create-summary* - Provide AppointmentId, SummaryText, UserId.
+**/create-summary** - Provide AppointmentId, SummaryText, UserId, and PairId.
 
-*/update-summary* - Provide AppointmentId, SummaryText, UserId.
+**/update-summary** - Provide AppointmentId, SummaryText, UserId.
 
 ## Pair Table
 A table containing mentor/mentee pairs.
@@ -57,6 +62,7 @@ A table containing mentor/mentee pairs.
 * MenteeId (int)
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
+* PrivacyAccepted (int, 0/1)
 
 ### Pair GET
 */pair/mentor/:MentorId* - Returns Pair by MentorId.
@@ -98,6 +104,7 @@ A table containing user profile information.
 * LastName (nvarchar(30))
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
+* PrivacyAccepted (int, 0/1)
 
 ### User GET
 **/all-users** - Returns all users in table.
