@@ -65,14 +65,14 @@ A table containing mentor/mentee pairs.
 * PrivacyAccepted (int, 0/1)
 
 ### Pair GET
-*/pair/mentor/:MentorId* - Returns Pair by MentorId.
+**/pair/mentor/:MentorId** - Returns Pair by MentorId.
 
-*/pair/mentee/:MenteeId* - Returns Pair by MenteeId.
+**/pair/mentee/:MenteeId** - Returns Pair by MenteeId.
 
 ### Pair POST
-*/create-pair* - Provide MentorId, MenteeId.
+**/create-pair** - Provide MentorId, MenteeId.
 
-*/delete-pair* - Provide MentorId, MenteeId.
+**/delete-pair** - Provide Id.
 
 ## Topic Table
 A table containing topics for meeting discussions.
@@ -99,21 +99,23 @@ A table containing user profile information.
 
 ### User Structure
 * Id (PK, int)
-* Email (nvarchar(256))
+* Email (nvarchar(255))
 * FirstName (nvarchar(30))
 * LastName (nvarchar(30))
+* Avatar (nvarchar(255))
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 * PrivacyAccepted (int, 0/1)
 
 ### User GET
 **/all-users** - Returns all users in table.
+
 **/user/:Id** - Returns user by Id.
 
 ### User POST
-*/create-user* - Provide Email, FirstName, LastName.
+**/create-user** - Provide Email, FirstName, LastName, Avatar, PrivacyAccepted.
 
-*/delete-user* - Provide Id, Email.
+**/delete-user** - Provide Id.
 
 ## UserContact Table
 A table containing contact info for users.

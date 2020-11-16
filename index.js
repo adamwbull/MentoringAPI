@@ -268,6 +268,132 @@ app.post('/update-summary', function(req, res) {
 });
 
 // ------------------------------------- //
+//              Pair Table               //
+// ------------------------------------- //
+
+app.get('/pair/mentor/:MentorId', function(req, res) {
+
+  var mentorId = req.params.MentorId;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input('input', sql.Int, mentorId)
+    .query('select * from [Pair] where MentorId=@input', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.get('/pair/mentee/:MenteeId', function(req, res) {
+
+  var menteeId = req.params.MenteeId;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input('input', sql.Int, menteeId)
+    .query('select * from [Pair] where MenteeId=@input', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/create-pair', function(req, res) {
+
+  var mentorId = req.body.MentorId;
+  var menteeId = req.body.MenteeId;
+  var date = new Date();
+  var privacyAccepted = 0;
+  var mentorPrivacyAccepted = 0;
+  var menteePrivacyAccepted = 0;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var mentorPrivRequest = new sql.Request();
+
+    mentorPrivRequest.input('MentorId', sql.Int, mentorId)
+    .query('select PrivacyAccepted as priv from [User] where Id=@MentorId', function(err, set) {
+
+      if (err) console.log(err);
+      mentorPrivacyAccepted = set.recordset[0].priv;
+
+      var menteePrivRequest = new sql.Request();
+
+      menteePrivRequest.input('MenteeId', sql.Int, menteeId)
+      .query('select PrivacyAccepted as priv from [User] where Id=@MenteeId', function(err, set) {
+
+        if (err) console.log(err);
+        menteePrivacyAccepted = set.recordset[0].priv;
+
+        if (menteePrivacyAccepted == 1 && mentorPrivacyAccepted == 1) {
+          privacyAccepted = 1;
+        }
+
+        var request = new sql.Request();
+
+        request
+        .input('MentorId', sql.Int, mentorId)
+        .input('MenteeId', sql.Int, menteeId)
+        .input('Date', sql.SmallDateTime, date)
+        .input('PrivacyAccepted', sql.Int, privacyAccepted)
+        .query('insert into [Pair] (MentorId, MenteeId, Created, LastUpdate, PrivacyAccepted) values (@MentorId, @MenteeId, @Date, @Date, @PrivacyAccepted)', function(err, set) {
+
+          if (err) console.log(err);
+          res.send(set);
+
+        });
+
+      });
+
+    });
+
+  });
+
+});
+
+app.post('/delete-pair', function(req, res) {
+
+  var id = req.body.Id;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('Id', sql.Int, id)
+    .query('delete from [Pair] where Id=@Id', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+// ------------------------------------- //
 //              User Table               //
 // ------------------------------------- //
 
@@ -303,6 +429,62 @@ app.get('/user/:userId', function(req, res) {
 
     request.input('input', sql.Int, userId)
     .query('select * from [User] where Id=@input', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/create-user', function(req, res) {
+
+  var email = req.body.Email;
+  var firstName = req.body.FirstName;
+  var lastName = req.body.LastName;
+  var avatar = req.body.Avatar;
+  var date = new Date();
+  var privacyAccepted = req.body.PrivacyAccepted;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('Email', sql.VarChar, email)
+    .input('FirstName', sql.VarChar, firstName)
+    .input('LastName', sql.VarChar, lastName)
+    .input('Avatar', sql.VarChar, avatar)
+    .input('Date', sql.SmallDateTime, date)
+    .input('PrivacyAccepted', sql.Int, privacyAccepted)
+    .query('insert into [User] (Email, FirstName, LastName, Avatar, Created, LastUpdate, PrivacyAccepted) values (@Email, @FirstName, @LastName, @Avatar, @Date, @Date, @PrivacyAccepted)', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/delete-user', function(req, res) {
+
+  var id = req.body.Id;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('Id', sql.Int, id)
+    .query('delete from [User] where Id=@Id', function(err, set) {
 
       if (err) console.log(err);
       res.send(set);
