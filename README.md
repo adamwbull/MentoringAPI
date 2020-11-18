@@ -87,12 +87,16 @@ A table containing topics for meeting discussions.
 * LastUpdate (smalldatetime)
 
 ### Topic GET
-*/current-topic* - Returns the most recently created topic.
+**/current-topic** - Returns the most recently created topic.
 
-*/topic/:Id* - Returns topic by Id.
+**/topic/:Id** - Returns topic by Id.
 
 ### Topic POST
-*/create-topic* - Provide PostedBy, DueDate, Title, Description.
+**/create-topic** - Provide PostedBy, DueDate, Title, Description.
+
+**/update-topic** - Provide Id, PostedBy, DueDate, Title, Description.
+
+**/delete-topic** - Provide Id.
 
 ## User Table
 A table containing user profile information.
@@ -124,14 +128,16 @@ A table containing contact info for users.
 * Id (PK, int)
 * UserId (int)
 * ContactValue (nvarchar(max))
-* ContactType (nvarchar(15)) Should be *Email* or *Phone*.
+* ContactType (nvarchar(15)) Should be *Email*, *Phone*, or *LinkedIn*.
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
 ### UserContact GET
-*/contact/:Id* - Returns all contact info for a user.
+**/contact/:UserId** - Returns all contact info for a UserId.
 
 ### UserContact POST
-*/create-contact* - Provide UserId, ContactValue, ContactType.
+**/create-contact** - Provide UserId, ContactValue, ContactType.
 
-*/update-contact* - Provide UserId, ContactValue, ContactType.
+**/update-contact** - Provide Id, UserId, ContactValue, ContactType.
+
+**/delete-contact** - Provide Id.

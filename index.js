@@ -394,6 +394,141 @@ app.post('/delete-pair', function(req, res) {
 });
 
 // ------------------------------------- //
+//             Topic Table               //
+// ------------------------------------- //
+
+app.get('/current-topic', function(req, res) {
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .query('select * from [Topic] where Created in (select max(Created) as Created from [Topic])', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.get('/topic/:Id', function(req, res) {
+
+  var topicId = req.params.Id;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input("Id", sql.Int, topicId)
+    .query('select * from [Topic] where Id=@Id', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/create-topic', function(req, res) {
+
+  var postedBy = req.body.PostedBy;
+  var dueDate = req.body.DueDate;
+  var title = req.body.Title;
+  var description = req.body.Description;
+  var date = new Date();
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('PostedBy', sql.Int, postedBy)
+    .input('DueDate', sql.SmallDateTime, dueDate)
+    .input('Title', sql.VarChar, title)
+    .input('Description', sql.VarChar, description)
+    .input('Date', sql.SmallDateTime, date)
+    .query('insert into [Topic] (PostedBy, DueDate, Title, Description, Created, LastUpdate) values (@PostedBy, @DueDate, @Title, @Description, @Date, @Date)', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/update-topic', function(req, res) {
+
+  var id = req.body.Id;
+  var postedBy = req.body.PostedBy;
+  var dueDate = req.body.DueDate;
+  var title = req.body.Title;
+  var description = req.body.Description;
+  var date = new Date();
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('Id', sql.Int, id)
+    .input('PostedBy', sql.Int, postedBy)
+    .input('DueDate', sql.SmallDateTime, dueDate)
+    .input('Title', sql.VarChar, title)
+    .input('Description', sql.VarChar, description)
+    .input('Date', sql.SmallDateTime, date)
+    .query('update [Topic] set PostedBy=@PostedBy, DueDate=@DueDate, Title=@Title, Description=@Description, LastUpdate=@Date where Id=@Id', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/delete-topic', function(req, res) {
+
+  var id = req.body.Id;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('Id', sql.Int, id)
+    .query('delete from [Topic] where Id=@Id', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+
+
+// ------------------------------------- //
 //              User Table               //
 // ------------------------------------- //
 
@@ -485,6 +620,116 @@ app.post('/delete-user', function(req, res) {
     request
     .input('Id', sql.Int, id)
     .query('delete from [User] where Id=@Id', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+// ------------------------------------- //
+//           UserContact Table           //
+// ------------------------------------- //
+
+
+app.get('/contact/:UserId', function(req, res) {
+
+  var id = req.params.UserId;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input("Id", sql.Int, id)
+    .query('select * from [UserContact] where UserId=@Id', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/create-contact', function(req, res) {
+
+  var userId = req.body.UserId;
+  var contactValue = req.body.ContactValue;
+  var contactType = req.body.ContactType;
+  var date = new Date();
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('UserId', sql.Int, userId)
+    .input('ContactValue', sql.VarChar, contactValue)
+    .input('ContactType', sql.VarChar, contactType)
+    .input('Date', sql.SmallDateTime, date)
+    .query('insert into [UserContact] (UserId, ContactValue, ContactType, Created, LastUpdate) values (@UserId, @ContactValue, @ContactType, @Date, @Date)', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/update-contact', function(req, res) {
+
+  var id = req.body.Id;
+  var userId = req.body.UserId;
+  var contactValue = req.body.ContactValue;
+  var contactType = req.body.ContactType;
+  var date = new Date();
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('Id', sql.Int, id)
+    .input('UserId', sql.Int, userId)
+    .input('ContactValue', sql.VarChar, contactValue)
+    .input('ContactType', sql.VarChar, contactType)
+    .input('Date', sql.SmallDateTime, date)
+    .query('update [UserContact] set ContactValue=@ContactValue, ContactType=@ContactType where Id=@Id and UserId=@UserId', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.post('/delete-contact', function(req, res) {
+
+  var id = req.body.Id;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('Id', sql.Int, id)
+    .query('delete from [UserContact] where Id=@Id', function(err, set) {
 
       if (err) console.log(err);
       res.send(set);
