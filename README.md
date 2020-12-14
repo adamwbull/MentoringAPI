@@ -114,9 +114,9 @@ A table containing user profile information.
 ### User GET
 **/all-users** - Returns all users in table.
 
-**/user/:Id** - Returns user by Id.
+**/user/id/:Id** - Returns user by Id.
 
-**/user/:Email** - Returns user by Email.
+**/user/email/:Email** - Returns user by Email.
 
 ### User POST
 **/create-user** - Provide Email, FirstName, LastName, Avatar, PrivacyAccepted.

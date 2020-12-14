@@ -557,7 +557,7 @@ app.get('/all-users', function (req, res) {
 });
 
 // GET User by Id
-app.get('/user/:userId', function(req, res) {
+app.get('/user/id/:userId', function(req, res) {
 
   var userId = req.params.userId;
 
@@ -579,8 +579,8 @@ app.get('/user/:userId', function(req, res) {
 
 });
 
-// GET User by Id
-app.get('/user/:email', function(req, res) {
+// GET User by Email
+app.get('/user/email/:email', function(req, res) {
 
   var email = req.params.email;
 
