@@ -1,3 +1,8 @@
+/*
+API Dev Server for MentoringApp
+To start: node index.js
+Localtunnel: lt --port 3000 --subdomain mshipapp
+*/
 var express = require("express");
 var bodyParser = require("body-parser");
 var sql = require("mssql");
@@ -564,6 +569,29 @@ app.get('/user/:userId', function(req, res) {
 
     request.input('input', sql.Int, userId)
     .query('select * from [User] where Id=@input', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+// GET User by Id
+app.get('/user/:email', function(req, res) {
+
+  var email = req.params.email;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input('input', sql.VarChar, email)
+    .query('select * from [User] where Email=@input', function (err, set) {
 
       if (err) console.log(err);
       res.send(set);

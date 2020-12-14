@@ -116,6 +116,8 @@ A table containing user profile information.
 
 **/user/:Id** - Returns user by Id.
 
+**/user/:Email** - Returns user by Email.
+
 ### User POST
 **/create-user** - Provide Email, FirstName, LastName, Avatar, PrivacyAccepted.
 
