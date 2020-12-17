@@ -121,6 +121,8 @@ A table containing user profile information.
 ### User POST
 **/create-user** - Provide Email, FirstName, LastName, Avatar, PrivacyAccepted.
 
+**/handle-privacy** - Provide Email, PrivacyAccepted.
+
 **/delete-user** - Provide Id.
 
 ## UserContact Table
