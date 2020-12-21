@@ -660,6 +660,31 @@ app.post('/update-privacy', function(req, res) {
 
 });
 
+app.post('/update-approved', function(req, res) {
+
+  var email = req.body.Email;
+  var approved = req.body.Approved;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('Approved', sql.Int, approved)
+    .input('Email', sql.VarChar, email)
+    .query('update [User] set Approved=@Approved where Email=@Email', function(err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
 app.post('/delete-user', function(req, res) {
 
   var id = req.body.Id;

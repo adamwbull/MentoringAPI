@@ -110,6 +110,7 @@ A table containing user profile information.
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 * PrivacyAccepted (int, 0/1)
+* Approved (int, 0/1)
 
 ### User GET
 **/all-users** - Returns all users in table.
@@ -121,7 +122,7 @@ A table containing user profile information.
 ### User POST
 **/create-user** - Provide Email, FirstName, LastName, Avatar, PrivacyAccepted.
 
-**/handle-privacy** - Provide Email, PrivacyAccepted.
+**/update-privacy** - Provide Email, PrivacyAccepted.
 
 **/delete-user** - Provide Id.
 
