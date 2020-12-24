@@ -40,9 +40,10 @@ app.get('/all-appointments', function (req, res) {
 });
 
 // GET Appointment by PairId
-app.get('/appointment/:PairId', function(req, res) {
+app.get('/appointment/upcoming/:PairId', function(req, res) {
 
   var pairId = req.params.PairId;
+  var date = new Date();
 
   sql.connect(config, function (err) {
 
@@ -51,7 +52,32 @@ app.get('/appointment/:PairId', function(req, res) {
     var request = new sql.Request();
 
     request.input('input', sql.Int, pairId)
-    .query('select * from [Appointment] where PairId=@input', function (err, set) {
+    .input('date', sql.SmallDateTime, date)
+    .query('select * from [Appointment] where PairId=@input and ScheduledAt>=@date', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.get('/appointment/past/:PairId', function(req, res) {
+
+  var pairId = req.params.PairId;
+  var date = new Date();
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input('input', sql.Int, pairId)
+    .input('date', sql.SmallDateTime, date)
+    .query('select * from [Appointment] where PairId=@input and ScheduledAt<=@date', function (err, set) {
 
       if (err) console.log(err);
       res.send(set);
@@ -275,6 +301,28 @@ app.post('/update-summary', function(req, res) {
 // ------------------------------------- //
 //              Pair Table               //
 // ------------------------------------- //
+
+app.get('/pair/:UserId', function(req, res) {
+
+  var id = req.params.UserId;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input('input', sql.Int, id)
+    .query('select * from [Pair] where MentorId=@input or Menteeid=@input', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
 
 app.get('/pair/mentor/:MentorId', function(req, res) {
 

@@ -19,7 +19,9 @@ A table containing appointments scheduled between a mentor/mentee pair.
 ### Appointment GET
 **/all-appointments** - Returns all appointments in table.
 
-**/appointment/:PairId** - Returns all appointments between specified pair.
+**/appointment/upcoming/:PairId** - Returns all appointments between specified pair where ScheduledAt is in the future.
+
+**/appointment/past/:PairId** - Returns all appointments between specified pair where ScheduledAt is in the past.
 
 ### Appointment POST
 **/create-appointment** - Provide PairId, ScheduledAt.
@@ -68,6 +70,8 @@ A table containing mentor/mentee pairs.
 **/pair/mentor/:MentorId** - Returns Pair by MentorId.
 
 **/pair/mentee/:MenteeId** - Returns Pair by MenteeId.
+
+**/pair/:UserId** - Returns all Pairs that UserId is a part of.
 
 ### Pair POST
 **/create-pair** - Provide MentorId, MenteeId.
@@ -123,6 +127,8 @@ A table containing user profile information.
 **/create-user** - Provide Email, FirstName, LastName, Avatar, PrivacyAccepted.
 
 **/update-privacy** - Provide Email, PrivacyAccepted.
+
+**/update-approved** - Provide Email, Approved.
 
 **/delete-user** - Provide Id.
 
