@@ -12,7 +12,7 @@ A table containing appointments scheduled between a mentor/mentee pair.
 * Id (PK, int)
 * PairId (int)
 * ScheduledAt (smalldatetime)
-* Status (nvarchar(12)) Should be *Pending*, *Scheduled*, *Completed*, or *Cancelled*.
+* Status (nvarchar(12)) Should be *Pending*, *Scheduled*, *Done*, *Completed*, or *Cancelled*.
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
@@ -37,7 +37,6 @@ A table containing summaries written for a particular appointment by a certain u
 * SummaryText (nvarchar(max))
 * UserId (int)
 * Status (nvarchar(10)) Should be *Submitted*, or *Edited*.
-* PairId (int)
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 
@@ -51,7 +50,7 @@ A table containing summaries written for a particular appointment by a certain u
 **/summary/appointment/:AppointmentId** - Returns all summaries for a particular meeting.
 
 ### AppointmentSummary POST
-**/create-summary** - Provide AppointmentId, SummaryText, UserId, and PairId.
+**/create-summary** - Provide AppointmentId, SummaryText, UserId.
 
 **/update-summary** - Provide AppointmentId, SummaryText, UserId.
 

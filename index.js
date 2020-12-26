@@ -240,7 +240,6 @@ app.post('/create-summary', function(req, res) {
   var appointmentId = req.body.AppointmentId;
   var summaryText = req.body.SummaryText;
   var userId = req.body.UserId;
-  var pairId = req.body.PairId;
   var date = new Date();
 
   sql.connect(config, function (err) {
@@ -256,8 +255,7 @@ app.post('/create-summary', function(req, res) {
     .input('Status', sql.VarChar, "Submitted")
     .input('Created', sql.SmallDateTime, date)
     .input('LastUpdate', sql.SmallDateTime, date)
-    .input('PairId', sql.Int, pairId)
-    .query('insert into [AppointmentSummary] (AppointmentId, SummaryText, UserId, Status, Created, LastUpdate, PairId) values (@AppointmentId, @SummaryText, @UserId, @Status, @Created, @LastUpdate, @PairId)', function(err, set) {
+    .query('insert into [AppointmentSummary] (AppointmentId, SummaryText, UserId, Status, Created, LastUpdate) values (@AppointmentId, @SummaryText, @UserId, @Status, @Created, @LastUpdate)', function(err, set) {
 
       if (err) console.log(err);
       res.send(set);
