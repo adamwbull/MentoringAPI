@@ -457,7 +457,7 @@ app.get('/current-topic', function(req, res) {
     var request = new sql.Request();
 
     request
-    .query('select * from [Topic] where ActiveTopic=1', function (err, set) {
+    .query('select * from [Topic] where ActiveTopic=1 LIMIT 1', function (err, set) {
 
       if (err) console.log(err);
       res.send(set);
