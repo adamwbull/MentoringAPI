@@ -88,16 +88,19 @@ A table containing topics for meeting discussions.
 * Description (nvarchar(max))
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
+* ActiveTopic (int)
 
 ### Topic GET
-**/current-topic** - Returns the most recently created topic.
+**/current-topic** - Returns the topic with ActiveTopic=1.
+
+**/all-topics** - Returns all topics from newest to oldest.
 
 **/topic/:Id** - Returns topic by Id.
 
 ### Topic POST
 **/create-topic** - Provide PostedBy, DueDate, Title, Description.
 
-**/update-topic** - Provide Id, PostedBy, DueDate, Title, Description.
+**/update-topic** - Provide Id, PostedBy, DueDate, Title, Description, ActiveTopic.
 
 **/delete-topic** - Provide Id.
 

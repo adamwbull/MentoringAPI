@@ -457,7 +457,27 @@ app.get('/current-topic', function(req, res) {
     var request = new sql.Request();
 
     request
-    .query('select * from [Topic] where Created in (select max(Created) as Created from [Topic])', function (err, set) {
+    .query('select * from [Topic] where ActiveTopic=1', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
+app.get('/all-topics', function(req, res) {
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .query('select * from [Topic] order by Created DESC', function (err, set) {
 
       if (err) console.log(err);
       res.send(set);
@@ -528,6 +548,7 @@ app.post('/update-topic', function(req, res) {
   var dueDate = req.body.DueDate;
   var title = req.body.Title;
   var description = req.body.Description;
+  var activeTopic = req.body.ActiveTopic;
   var date = new Date();
 
   sql.connect(config, function (err) {
@@ -543,7 +564,8 @@ app.post('/update-topic', function(req, res) {
     .input('Title', sql.VarChar, title)
     .input('Description', sql.VarChar, description)
     .input('Date', sql.SmallDateTime, date)
-    .query('update [Topic] set PostedBy=@PostedBy, DueDate=@DueDate, Title=@Title, Description=@Description, LastUpdate=@Date where Id=@Id', function(err, set) {
+    .input('ActiveTopic', sql.Int, activeTopic)
+    .query('update [Topic] set PostedBy=@PostedBy, DueDate=@DueDate, Title=@Title, Description=@Description, LastUpdate=@Date, ActiveTopic=@ActiveTopic where Id=@Id', function(err, set) {
 
       if (err) console.log(err);
       res.send(set);
