@@ -93,7 +93,7 @@ A table containing topics for meeting discussions.
 ### Topic GET
 **/current-topic** - Returns the topic with ActiveTopic=1.
 
-**/all-topics** - Returns all topics from newest to oldest.
+**/all-topics** - Returns all topics from newest to oldest, except where ActiveTopic=1.
 
 **/topic/:Id** - Returns topic by Id.
 

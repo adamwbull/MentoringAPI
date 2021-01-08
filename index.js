@@ -457,7 +457,7 @@ app.get('/current-topic', function(req, res) {
     var request = new sql.Request();
 
     request
-    .query('select * from [Topic] where ActiveTopic=1 LIMIT 1', function (err, set) {
+    .query('select * from [Topic] where ActiveTopic=1', function (err, set) {
 
       if (err) console.log(err);
       res.send(set);
@@ -477,7 +477,7 @@ app.get('/all-topics', function(req, res) {
     var request = new sql.Request();
 
     request
-    .query('select * from [Topic] order by Created DESC', function (err, set) {
+    .query('select * from [Topic] where ActiveTopic=0 order by Created DESC', function (err, set) {
 
       if (err) console.log(err);
       res.send(set);
