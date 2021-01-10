@@ -88,6 +88,28 @@ app.get('/appointment/past/:PairId', function(req, res) {
 
 });
 
+app.get('/appointment/:Id', function(req, res) {
+
+  var id = req.params.Id;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input('input', sql.Int, id)
+    .query('select * from [Appointment] where Id=@input', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
 // POST create appointment (provide PairId, ScheduledAt)
 app.post('/create-appointment', function(req, res) {
 

@@ -20,6 +20,8 @@ A table containing appointments scheduled between a mentor/mentee pair.
 ### Appointment GET
 **/all-appointments** - Returns all appointments in table.
 
+**/appointment/:Id** - Returns appointment matching Id.
+
 **/appointment/upcoming/:PairId** - Returns all appointments between specified pair where ScheduledAt is in the future.
 
 **/appointment/past/:PairId** - Returns all appointments between specified pair where ScheduledAt is in the past.
