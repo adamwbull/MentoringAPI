@@ -11,6 +11,7 @@ A table containing appointments scheduled between a mentor/mentee pair.
 ### Appointment Structure
 * Id (PK, int)
 * PairId (int)
+* TopicId (int) *current topic when appointment was proposed*
 * ScheduledAt (smalldatetime)
 * Status (nvarchar(12)) Should be *Pending*, *Scheduled*, *Done*, *Completed*, or *Cancelled*.
 * Created (smalldatetime)
@@ -24,7 +25,7 @@ A table containing appointments scheduled between a mentor/mentee pair.
 **/appointment/past/:PairId** - Returns all appointments between specified pair where ScheduledAt is in the past.
 
 ### Appointment POST
-**/create-appointment** - Provide PairId, ScheduledAt.
+**/create-appointment** - Provide PairId, ScheduledAt, TopicId.
 
 **/update-appointment-status** - Provide Id, Status.
 

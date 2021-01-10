@@ -94,7 +94,7 @@ app.post('/create-appointment', function(req, res) {
   var pairId = req.body.PairId;
   var scheduledAt = req.body.ScheduledAt;
   var date = new Date();
-  // .toISOString().slice(0, 19).replace('T', ' ')
+  var topicId = req.body.TopicId;
 
   sql.connect(config, function (err) {
 
@@ -108,8 +108,9 @@ app.post('/create-appointment', function(req, res) {
     .input('Status', sql.VarChar(12), 'Pending')
     .input('Created', sql.SmallDateTime, date)
     .input('LastUpdate', sql.SmallDateTime, date)
-    .query('insert into [Appointment] (PairId, ScheduledAt, Status, Created, LastUpdate)'
-     + ' values (@PairId, @ScheduledAt, @Status, @Created, @LastUpdate)', function(err, set) {
+    .input('TopicId', sql.Int, topicId)
+    .query('insert into [Appointment] (PairId, ScheduledAt, Status, Created, LastUpdate, TopicId)'
+     + ' values (@PairId, @ScheduledAt, @Status, @Created, @LastUpdate, @TopicId)', function(err, set) {
 
        if (err) console.log(err);
        res.send(set);
