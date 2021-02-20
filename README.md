@@ -75,6 +75,8 @@ A table containing mentor/mentee pairs.
 
 **/pair/mentee/:MenteeId** - Returns Pair by MenteeId.
 
+**/pair/both/:MentorId/:MenteeId** - Returns pair if exists for these users.
+
 **/pair/:UserId** - Returns all Pairs that UserId is a part of.
 
 ### Pair POST

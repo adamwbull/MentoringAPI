@@ -349,6 +349,30 @@ app.get('/pair/:UserId', function(req, res) {
 
 });
 
+app.get('/pair/both/:MentorId/:MenteeId', function(req, res) {
+
+  var mentorId = req.params.MentorId;
+  var menteeId = req.params.MenteeId;
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request.input('Mentor', sql.Int, mentorId)
+    .input('Mentee', sql.Int, menteeId)
+    .query('select * from [Pair] where MentorId=@Mentor and MenteeId=@Mentee', function (err, set) {
+
+      if (err) console.log(err);
+      res.send(set);
+
+    });
+
+  });
+
+});
+
 app.get('/pair/mentor/:MentorId', function(req, res) {
 
   var mentorId = req.params.MentorId;
