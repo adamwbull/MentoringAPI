@@ -301,7 +301,7 @@ app.post('/create-appointment', async function(req, res) {
            });
 
         });
-        
+
       });
 
     });
@@ -986,7 +986,7 @@ app.get('/user/email/:Email/:Token', async function(req, res) {
   var email = req.params.Email;
   var token = req.params.Token;
 
-  if (await authorizeExists(token)) {
+  if (await authorizeExistsWrapper(token)) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1017,7 +1017,7 @@ app.post('/create-user', async function(req, res) {
   var date = new Date();
   var privacyAccepted = req.body.PrivacyAccepted;
 
-  if (await authorizeExists(token)) {
+  if (await authorizeExistsWrapper(token)) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1176,7 +1176,7 @@ app.get('/contact/:UserId/:Token', function(req, res) {
   var id = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeExists(token)) {
+  if (await authorizeExistsWrapper(token)) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
