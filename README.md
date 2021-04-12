@@ -18,18 +18,18 @@ A table containing appointments scheduled between a mentor/mentee pair.
 * LastUpdate (smalldatetime)
 
 ### Appointment GET
-**/all-appointments** - Returns all appointments in table.
+**/all-appointments/:Token** - Returns all appointments in table. Provide admin Token.
 
-**/appointment/:Id** - Returns appointment matching Id.
+**/appointment/upcoming/:PairId/:UserId/:Token** - Returns all appointments between specified pair where ScheduledAt is in the future.
 
-**/appointment/upcoming/:PairId** - Returns all appointments between specified pair where ScheduledAt is in the future.
+**/appointment/past/:PairId/:UserId/:Token** - Returns all appointments between specified pair where ScheduledAt is in the past.
 
-**/appointment/past/:PairId** - Returns all appointments between specified pair where ScheduledAt is in the past.
+**/appointment/:Id/:UserId/:Token** - Returns appointment matching Id.
 
 ### Appointment POST
-**/create-appointment** - Provide PairId, ScheduledAt, TopicId.
+**/create-appointment** - Provide PairId, ScheduledAt, TopicId, UserId, Token.
 
-**/update-appointment-status** - Provide Id, Status.
+**/update-appointment-status** - Provide Id, Status, UserId, Token.
 
 ## AppointmentSummary Table
 A table containing summaries written for a particular appointment by a certain user.
@@ -44,20 +44,20 @@ A table containing summaries written for a particular appointment by a certain u
 * LastUpdate (smalldatetime)
 
 ### AppointmentSummary GET
-**/all-summaries** - Returns all submitted summaries that are PrivacyAccepted.
+**/all-summaries/:Token** - Returns all submitted summaries that are PrivacyAccepted.
 
-**/summary/pair/:PairId** - Returns all summaries written by members of a certain pair.
+**/summary/pair/:PairId/:UserId/:Token** - Returns all summaries written by members of a certain pair.
 
-**/summary/user/:UserId** - Returns all summaries written by a user.
+**/summary/user/:UserId/:Token** - Returns all summaries written by a user.
 
-**/summary/appointment/:AppointmentId** - Returns all summaries for a particular meeting.
+**/summary/appointment/:AppointmentId/:UserId/:Token** - Returns all summaries for a particular meeting.
 
 ### AppointmentSummary POST
-**/create-summary** - Provide AppointmentId, SummaryText, UserId.
+**/create-summary** - Provide AppointmentId, SummaryText, UserId, Token.
 
-**/update-summary** - Provide AppointmentId, SummaryText, UserId.
+**/update-summary** - Provide AppointmentId, SummaryText, UserId, Token.
 
-**/delete-summary** - Provide AppointmentId, UserId.
+**/delete-summary** - Provide AppointmentId, UserId, Token.
 
 ## Pair Table
 A table containing mentor/mentee pairs.
@@ -71,18 +71,18 @@ A table containing mentor/mentee pairs.
 * PrivacyAccepted (int, 0/1)
 
 ### Pair GET
-**/pair/mentor/:MentorId** - Returns Pair by MentorId.
+**/pair/mentor/:MentorId/:UserId/:Token** - Returns Pair by MentorId.
 
-**/pair/mentee/:MenteeId** - Returns Pair by MenteeId.
+**/pair/mentee/:MenteeId/:UserId/:Token** - Returns Pair by MenteeId.
 
-**/pair/both/:MentorId/:MenteeId** - Returns pair if exists for these users.
+**/pair/both/:MentorId/:MenteeId/:UserId/:Token** - Returns pair if exists for these users.
 
-**/pair/:UserId** - Returns all Pairs that UserId is a part of.
+**/pair/:UserId/:Token** - Returns all Pairs that UserId is a part of.
 
 ### Pair POST
-**/create-pair** - Provide MentorId, MenteeId.
+**/create-pair** - Provide MentorId, MenteeId, admin Token.
 
-**/delete-pair** - Provide Id.
+**/delete-pair** - Provide Id, admin Token.
 
 ## Topic Table
 A table containing topics for meeting discussions.
@@ -98,11 +98,11 @@ A table containing topics for meeting discussions.
 * ActiveTopic (int)
 
 ### Topic GET
-**/current-topic** - Returns the topic with ActiveTopic=1.
+**/current-topic/:UserId/:Token** - Returns the topic with ActiveTopic=1.
 
-**/all-topics** - Returns all topics from newest to oldest, except where ActiveTopic=1.
+**/all-topics/:UserId/:Token** - Returns all topics from newest to oldest, except where ActiveTopic=1.
 
-**/topic/:Id** - Returns topic by Id.
+**/topic/:Id/:UserId/:Token** - Returns topic by Id.
 
 ### Topic POST
 **/create-topic** - Provide PostedBy, DueDate, Title, Description.
@@ -116,30 +116,34 @@ A table containing user profile information.
 
 ### User Structure
 * Id (PK, int)
+* Token (nvarchar(64))
 * Email (nvarchar(255))
 * FirstName (nvarchar(30))
 * LastName (nvarchar(30))
 * Avatar (nvarchar(255))
+* ExpoPushToken (nvcarchar(max))
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 * PrivacyAccepted (int, 0/1)
 * Approved (int, 0/1)
 
 ### User GET
-**/all-users** - Returns all users in table.
+**/all-users/:Token** - Provide admin Token.
 
-**/user/id/:Id** - Returns user by Id.
+**/user/id/:UserId/:Token** - Returns user by Id, provide Token.
 
-**/user/email/:Email** - Returns user by Email.
+**/user/email/:Email/:Token** - Returns user by Email, Token.
 
 ### User POST
-**/create-user** - Provide Email, FirstName, LastName, Avatar, PrivacyAccepted.
+**/create-user** - Provide Token, Email, FirstName, LastName, Avatar, ExpoPushToken, PrivacyAccepted.
 
-**/update-privacy** - Provide Email, PrivacyAccepted.
+*/update-expo-push-token* - Provide Email of user, ExpoPushToken, UserId, Token.
 
-**/update-approved** - Provide Email, Approved.
+**/update-privacy** - Provide Email, PrivacyAccepted, Token.
 
-**/delete-user** - Provide Id.
+**/update-approved** - Provide Email, Approved, Token.
+
+**/delete-user** - Provide Id, Token.
 
 ## UserContact Table
 A table containing contact info for users.
@@ -153,11 +157,11 @@ A table containing contact info for users.
 * LastUpdate (smalldatetime)
 
 ### UserContact GET
-**/contact/:UserId** - Returns all contact info for a UserId.
+**/contact/:UserId/:Token** - Returns all contact info for a UserId. Provide existing Token.
 
 ### UserContact POST
-**/create-contact** - Provide UserId, ContactValue, ContactType.
+**/create-contact** - Provide UserId, Token, ContactValue, ContactType.
 
-**/update-contact** - Provide Id, UserId, ContactValue, ContactType.
+**/update-contact** - Provide Id, UserId, Token, ContactValue, ContactType.
 
 **/delete-contact** - Provide Id.
