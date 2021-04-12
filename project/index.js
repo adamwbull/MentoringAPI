@@ -45,7 +45,7 @@ async function authorizeMatch(id, token, callback) {
     .query('select * from [User] where Token=@Token and Id=@Id', function (err, set) {
 
       if (err) console.log(err);
-      if (set.rowsAffected > 0) {
+      if (set.recordsets.length > 0) {
         callback(true);
       } else {
         callback(false);
@@ -77,7 +77,7 @@ async function authorizeExists(token, callback) {
     .query('select * from [User] where Token=@Token', function (err, set) {
 
       if (err) console.log(err);
-      if (set.rowsAffected > 0) {
+      if (set.recordsets.length > 0) {
         callback(true);
       } else {
         callback(false);
@@ -109,7 +109,7 @@ async function authorizeAdmin(token, callback) {
     .query('select * from [User] where Token=@Token and Type=1', function (err, set) {
 
       if (err) console.log(err);
-      if (set.rowsAffected > 0) {
+      if (set.recordsets.length > 0) {
         callback(true);
       } else {
         callback(false);
