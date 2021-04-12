@@ -1,3 +1,4 @@
+/*jshint esversion: 8 */
 /*
 API Dev Server for MentoringApp
 To start: node index.js
@@ -31,7 +32,7 @@ const sendPushNotification = require("../utilities/pushNotifications");
 //            Token Securing             //
 // ------------------------------------- //
 
-async function authorizeMatch(token, id, callback) {
+async function authorizeMatch(id, token, callback) {
 
   sql.connect(config, function (err) {
 
@@ -56,9 +57,9 @@ async function authorizeMatch(token, id, callback) {
 
 }
 
-async function authorizeMatchWrapper(token, id) {
+async function authorizeMatchWrapper(id, token) {
     return new Promise((resolve) => {
-        authorizeMatch(token,id,(callback) => {
+        authorizeMatch(id,token,(callback) => {
             resolve(callback);
         });
     });
@@ -137,7 +138,7 @@ app.get('/all-appointments/:Token', async function (req, res) {
 
   var token = req.params.Token;
 
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -165,7 +166,7 @@ app.get('/appointment/upcoming/:PairId/:UserId/:Token', async function(req, res)
   var userId = req.params.UserId;
   var date = new Date();
 
-  if (await authorizeMatchWrapper(token, userId)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -195,7 +196,7 @@ app.get('/appointment/past/:PairId/:UserId/:Token', async function(req, res) {
   var token = req.params.Token;
   var date = new Date();
 
-  if (await authorizeMatchWrapper(token, userId)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -224,7 +225,7 @@ app.get('/appointment/:Id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(token, userId)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -241,7 +242,7 @@ app.get('/appointment/:Id/:UserId/:Token', async function(req, res) {
 
     });
   } else {
-    res.send({success:false})
+    res.send({success:false});
   }
 
 });
@@ -256,7 +257,7 @@ app.post('/create-appointment', async function(req, res) {
   var date = new Date();
   var topicId = req.body.TopicId;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -318,7 +319,7 @@ app.post('/update-appointment-status', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -350,7 +351,7 @@ app.get('/all-summaries/:Token', async function(req, res) {
 
   var token = req.params.Token;
 
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -378,7 +379,7 @@ app.get('/summary/pair/:PairId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -406,7 +407,7 @@ app.get('/summary/user/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -434,7 +435,7 @@ app.get('/summary/appointment/:AppointmentId/:UserId/:Token', async function(req
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -464,7 +465,7 @@ app.post('/create-summary', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -500,7 +501,7 @@ app.post('/update-summary', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -536,7 +537,7 @@ app.get('/pair/:UserId/:Token', async function(req, res) {
   var id = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(id, token)) {
+  var check = await authorizeMatchWrapper(id, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -565,7 +566,7 @@ app.get('/pair/both/:MentorId/:MenteeId/:UserId/:Token', async function(req, res
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -594,7 +595,7 @@ app.get('/pair/mentor/:MentorId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -622,7 +623,7 @@ app.get('/pair/mentee/:MenteeId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -654,7 +655,7 @@ app.post('/create-pair', async function(req, res) {
   var mentorPrivacyAccepted = 0;
   var menteePrivacyAccepted = 0;
 
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -709,7 +710,7 @@ app.post('/delete-pair', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -741,7 +742,7 @@ app.get('/current-topic/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -768,7 +769,7 @@ app.get('/all-topics/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -796,7 +797,7 @@ app.get('/topic/:Id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -827,7 +828,7 @@ app.post('/create-topic', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -865,7 +866,7 @@ app.post('/update-topic', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -899,7 +900,7 @@ app.post('/delete-topic', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -932,7 +933,7 @@ app.post('/delete-topic', async function(req, res) {
 app.get('/all-users/:Token', async function (req, res) {
 
   var token = req.params.Token;
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -958,7 +959,7 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -986,7 +987,7 @@ app.get('/user/email/:Email/:Token', async function(req, res) {
   var email = req.params.Email;
   var token = req.params.Token;
 
-  if (await authorizeExistsWrapper(token)) {
+  var check = await authorizeExistsWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1017,7 +1018,7 @@ app.post('/create-user', async function(req, res) {
   var date = new Date();
   var privacyAccepted = req.body.PrivacyAccepted;
 
-  if (await authorizeExistsWrapper(token)) {
+  var check = await authorizeExistsWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1053,7 +1054,7 @@ app.post('/update-privacy', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1084,7 +1085,7 @@ app.post('/update-expo-push-token', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1113,8 +1114,8 @@ app.post('/update-approved', async function(req, res) {
   var email = req.body.Email;
   var approved = req.body.Approved;
   var token = req.body.Token;
-
-  if (await authorizeMatchWrapper(userId, token)) {
+  var userId = req.body.UserId;
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1143,7 +1144,7 @@ app.post('/delete-user', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  if (await authorizeAdminWrapper(token)) {
+  var check = await authorizeAdminWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1171,12 +1172,12 @@ app.post('/delete-user', async function(req, res) {
 // ------------------------------------- //
 
 
-app.get('/contact/:UserId/:Token', function(req, res) {
+app.get('/contact/:UserId/:Token', async function(req, res) {
 
   var id = req.params.UserId;
   var token = req.params.Token;
 
-  if (await authorizeExistsWrapper(token)) {
+  var check = await authorizeExistsWrapper(token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1198,7 +1199,7 @@ app.get('/contact/:UserId/:Token', function(req, res) {
 
 });
 
-app.post('/create-contact', function(req, res) {
+app.post('/create-contact', async function(req, res) {
 
   var userId = req.body.UserId;
   var token = req.body.Token;
@@ -1206,7 +1207,7 @@ app.post('/create-contact', function(req, res) {
   var contactType = req.body.ContactType;
   var date = new Date();
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1233,7 +1234,7 @@ app.post('/create-contact', function(req, res) {
 
 });
 
-app.post('/update-contact', function(req, res) {
+app.post('/update-contact', async function(req, res) {
 
   var id = req.body.Id;
   var userId = req.body.UserId;
@@ -1242,7 +1243,7 @@ app.post('/update-contact', function(req, res) {
   var contactType = req.body.ContactType;
   var date = new Date();
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
@@ -1269,13 +1270,13 @@ app.post('/update-contact', function(req, res) {
 
 });
 
-app.post('/delete-contact', function(req, res) {
+app.post('/delete-contact', async function(req, res) {
 
   var id = req.body.Id;
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  if (await authorizeMatchWrapper(userId, token)) {
+  var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);

@@ -141,7 +141,7 @@ A table containing user profile information.
 
 **/update-privacy** - Provide Email, PrivacyAccepted, Token.
 
-**/update-approved** - Provide Email, Approved, Token.
+**/update-approved** - Provide Email, Approved, UserId, Token.
 
 **/delete-user** - Provide Id, Token.
 
