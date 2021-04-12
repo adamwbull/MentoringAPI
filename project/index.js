@@ -1004,6 +1004,8 @@ app.get('/user/email/:Email/:Token', async function(req, res) {
       });
 
     });
+  } else {
+   res.send({success:false});
   }
 
 });
