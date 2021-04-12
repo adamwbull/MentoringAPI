@@ -261,28 +261,48 @@ app.post('/create-appointment', async function(req, res) {
 
       if (err) console.log(err);
 
-      var request = new sql.Request();
+      var pairRequest = new sql.Request();
 
-      request
-      .input('PairId', sql.Int, pairId)
-      .input('ScheduledAt', sql.SmallDateTime, scheduledAt)
-      .input('Status', sql.VarChar(12), 'Pending')
-      .input('Created', sql.SmallDateTime, date)
-      .input('LastUpdate', sql.SmallDateTime, date)
-      .input('TopicId', sql.Int, topicId)
-      .query('insert into [Appointment] (PairId, ScheduledAt, Status, Created, LastUpdate, TopicId)'
-       + ' values (@PairId, @ScheduledAt, @Status, @Created, @LastUpdate, @TopicId)', function(err, set) {
+      pairRequest.input('PairId', sql.Int, pairId)
+      .input('Id', sql.Int, userId)
+      .query('select MentorId from [Pair] where MenteeId=@Id and Id=@PairId', function (err, set) {
 
-         if (err) {
-           console.log(err);
-         } else {
-           if (Expo.isExpoPushToken(expoPushToken))
-             await sendPushNotification(expoPushToken, 'Your mentee has proposed a new meeting!');
-         }
+        if (err) console.log(err);
+        var mentorId = set.recordset[0].MentorId;
 
-         res.send(set);
+        var mentorRequest = new sql.Request();
 
-       });
+        mentorRequest.input('Id', sql.Int, mentorId)
+        .query('select ExpoPushToken from [User] where Id=@Id', async function (err, set) {
+
+          if (err) console.log(err);
+          var expoPushToken = set.recordset[0].ExpoPushToken;
+          var request = new sql.Request();
+
+          request
+          .input('PairId', sql.Int, pairId)
+          .input('ScheduledAt', sql.SmallDateTime, scheduledAt)
+          .input('Status', sql.VarChar(12), 'Pending')
+          .input('Created', sql.SmallDateTime, date)
+          .input('LastUpdate', sql.SmallDateTime, date)
+          .input('TopicId', sql.Int, topicId)
+          .query('insert into [Appointment] (PairId, ScheduledAt, Status, Created, LastUpdate, TopicId)'
+           + ' values (@PairId, @ScheduledAt, @Status, @Created, @LastUpdate, @TopicId)', async function(err, set) {
+
+             if (err) {
+               console.log(err);
+             } else {
+               if (Expo.isExpoPushToken(expoPushToken))
+                 await sendPushNotification(expoPushToken, 'Your mentee has proposed a new meeting!');
+             }
+
+             res.send(set);
+
+           });
+
+        });
+        
+      });
 
     });
   } else {
