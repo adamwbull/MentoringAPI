@@ -10,7 +10,7 @@ var sql = require("mssql");
 var cors = require("cors");
 var app = express();
 const { Expo } = require("expo-server-sdk");
-
+let expo = new Expo({ accessToken: 'ZVKBleGrwLvwoTIHftrSFjseb9TSpaljblPjMh_q' });
 process.env.TZ = 'America/Los_Angeles';
 
 app.use(bodyParser.json());
@@ -26,7 +26,49 @@ var config = require('./config.js');
 //             Notifications             //
 // ------------------------------------- //
 
-const sendPushNotification = require("../utilities/pushNotifications");
+async function sendMessagesNotification(pushTokens, title, body, sound, data) {
+  // Create the messages that you want to send to clients
+  let messages = [];
+  for (let pushToken of pushTokens) {
+    // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+
+    // Check that all your push tokens appear to be valid Expo push tokens
+    if (!Expo.isExpoPushToken(pushToken)) {
+      console.error(`Push token ${pushToken} is not a valid Expo push token`);
+      continue;
+    }
+
+    // Construct a message (see https://docs.expo.io/push-notifications/sending-notifications/)
+    messages.push({
+      to: pushToken,
+      sound: sound,
+      title: title,
+      body: body,
+      badge: 1,
+      data: data,
+    })
+  }
+  let chunks = expo.chunkPushNotifications(messages);
+  (async () => {
+    // Send the chunks to the Expo push notification service. There are
+    // different strategies you could use. A simple one is to send one chunk at a
+    // time, which nicely spreads the load out over time:
+    for (let chunk of chunks) {
+      try {
+        let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        console.log(ticketChunk);
+        // NOTE: If a ticket contains an error code in ticket.details.error, you
+        // must handle it appropriately. The error codes are listed in the Expo
+        // documentation:
+        // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  })();
+
+  return true;
+}
 
 // ------------------------------------- //
 //            Token Securing             //
@@ -279,6 +321,8 @@ app.post('/create-appointment', async function(req, res) {
 
           if (err) console.log(err);
           var expoPushToken = set.recordset[0].ExpoPushToken;
+          var pushTokens = [expoPushToken];
+          sendMessagesNotification(pushTokens, 'New Appointment', 'Your mentee proposed a new appointment!', true, {Screen:'MeetingsScreen'})
           var request = new sql.Request();
 
           request
@@ -829,27 +873,45 @@ app.post('/create-topic', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  var check = await authorizeAdminWrapper(token); if (check) {
+  var check = await authorizeAdminWrapper(token);
+  if (check) {
     sql.connect(config, function (err) {
-
       if (err) console.log(err);
 
       var request = new sql.Request();
 
       request
-      .input('PostedBy', sql.Int, postedBy)
-      .input('DueDate', sql.SmallDateTime, dueDate)
-      .input('Title', sql.VarChar, title)
-      .input('Description', sql.VarChar, description)
-      .input('Date', sql.SmallDateTime, date)
-      .query('insert into [Topic] (PostedBy, DueDate, Title, Description, Created, LastUpdate) values (@PostedBy, @DueDate, @Title, @Description, @Date, @Date)', function(err, set) {
-
+      .query('select ExpoPushToken from [User] where Type=0', function(err, set) {
         if (err) console.log(err);
-        res.send(set);
+        var pushTokens = []
+        for (var i=0; i<set.recordset.length; i++) {
+          pushTokens.push(set.recordset[i].ExpoPushToken)
+        }
+        
+        sendMessagesNotification(pushTokens, 'New Topic', 'CS/M has posted a new topic!', true, {Screen:'TopicsScreen'})
 
-      });
+        sql.connect(config, function (err) {
 
-    });
+          if (err) console.log(err);
+
+          var request = new sql.Request();
+
+          request
+          .input('PostedBy', sql.Int, postedBy)
+          .input('DueDate', sql.SmallDateTime, dueDate)
+          .input('Title', sql.VarChar, title)
+          .input('Description', sql.VarChar, description)
+          .input('Date', sql.SmallDateTime, date)
+          .query('insert into [Topic] (PostedBy, DueDate, Title, Description, Created, LastUpdate) values (@PostedBy, @DueDate, @Title, @Description, @Date, @Date)', function(err, set) {
+
+            if (err) console.log(err);
+            res.send(set);
+
+          });
+
+        });
+      })
+    })
   } else {
    res.send({success:false});
   }
