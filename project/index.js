@@ -44,7 +44,6 @@ async function sendMessagesNotification(pushTokens, title, body, sound, data) {
       sound: sound,
       title: title,
       body: body,
-      badge: 1,
       data: data,
     })
   }
@@ -887,7 +886,7 @@ app.post('/create-topic', async function(req, res) {
         for (var i=0; i<set.recordset.length; i++) {
           pushTokens.push(set.recordset[i].ExpoPushToken)
         }
-        
+
         sendMessagesNotification(pushTokens, 'New Topic', 'CS/M has posted a new topic!', true, {Screen:'TopicsScreen'})
 
         sql.connect(config, function (err) {
