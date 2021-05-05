@@ -982,6 +982,41 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 
 });
 
+// GET User Id & Token Using LinkedInToken
+app.get('/user/access/:LinkedInToken', async function (req, res)
+{
+  var linkedInToken = req.params.LinkedInToken;
+
+  // get email address from LinkedIn
+  const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
+    method: 'GET',
+    headers: {
+      Authorization: 'Bearer ' + linkedInToken,
+    }
+  });
+  const emailPayload = await emailres.json();
+
+  const email = emailPayload.elements[0]["handle~"].emailAddress; if (email) {
+    sql.connect(config, function (err) {
+      
+      if (err) console.log(err);
+
+      var request = new sql.Request();
+
+      request.input('input', sql.VarChar, email)
+      .query('select Id, Token from [User] where Email=@input', function (err, set) {
+
+        if (err) console.log(err);
+        res.send(set);
+
+      });
+    });
+  } else {
+    res.send({success:false});
+  }
+
+});
+
 // GET User by Email
 app.get('/user/email/:Email/:Token', async function(req, res) {
 
