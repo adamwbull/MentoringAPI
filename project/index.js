@@ -2,9 +2,11 @@
 /*
 API Dev Server for MentoringApp
 To start: node index.js
-Localtunnel: lt --port 3000 --subdomain mshipapp
+Localtunnel: lt --port 80* --subdomain mshipapp
+* used to be port 3000
 */
 var express = require("express");
+const fetch = require('node-fetch');
 var bodyParser = require("body-parser");
 var sql = require("mssql");
 var cors = require("cors");
@@ -1057,7 +1059,7 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
   });
   const emailPayload = await emailres.json();
 
-  const email = emailPayload.elements[0]["handle~"].emailAddress; if (email) {
+  var email = emailPayload.elements[0]["handle~"].emailAddress; if (email) {
     sql.connect(config, function (err) {
       
       if (err) console.log(err);
