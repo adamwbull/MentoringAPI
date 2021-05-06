@@ -1050,6 +1050,8 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 {
   var linkedInToken = req.params.LinkedInToken;
 
+  console.log(linkedInToken);
+
   // get email address from LinkedIn
   const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
     method: 'GET',
@@ -1058,6 +1060,8 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
     }
   });
   const emailPayload = await emailres.json();
+
+  console.log(emailPayload);
 
   var email = emailPayload.elements[0]["handle~"].emailAddress; if (email) {
     sql.connect(config, function (err) {
@@ -1070,6 +1074,7 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
       .query('select Id, Token from [User] where Email=@input', function (err, set) {
 
         if (err) console.log(err);
+        console.log(set);
         res.send(set);
 
       });
@@ -1077,7 +1082,6 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
   } else {
     res.send({success:false});
   }
-
 });
 
 // GET User by Email
