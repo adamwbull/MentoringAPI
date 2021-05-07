@@ -10,6 +10,7 @@ const fetch = require('node-fetch');
 var bodyParser = require("body-parser");
 var sql = require("mssql");
 var cors = require("cors");
+var crypto = require("crypto")
 var app = express();
 const { Expo } = require("expo-server-sdk");
 let expo = new Expo({ accessToken: 'ZVKBleGrwLvwoTIHftrSFjseb9TSpaljblPjMh_q' });
@@ -993,6 +994,8 @@ app.post('/delete-topic', async function(req, res) {
 //              User Table               //
 // ------------------------------------- //
 
+
+
 // GET all Users
 app.get('/all-users/:Token', async function (req, res) {
 
@@ -1045,6 +1048,26 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 
 });
 
+async function setNewUserToken(email, access_token) {
+  await sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+
+    request
+    .input('AccessToken', sql.VarChar, access_token)
+    .input('Email', sql.VarChar, email)
+    .query('update [User] set Token=@AccessToken where Email=@Email', function(err, set) {
+
+      if (err) console.log(err);
+      console.log(set);
+      // res.send(set);
+    });
+
+  });
+}
+
 // GET User Id & Token Using LinkedInToken
 app.get('/user/access/:LinkedInToken', async function (req, res)
 {
@@ -1075,6 +1098,13 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
         if (err) console.log(err);
         console.log(set);
+
+        if (set.recordset[0].Token == null) {
+          var newToken = crypto.createHash('sha256').update(access_token + new Date().toString()).digest('hex');
+          set.recordset[0].Token = newToken;
+          await setNewUserToken(email, newToken);
+        }
+
         res.send(set);
 
       });
