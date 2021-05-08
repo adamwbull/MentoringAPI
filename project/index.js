@@ -1049,6 +1049,9 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 });
 
 async function setNewUserToken(email, access_token) {
+
+  console.log("New Token: ", access_token);
+
   await sql.connect(config, function (err) {
 
     if (err) console.log(err);
@@ -1061,7 +1064,7 @@ async function setNewUserToken(email, access_token) {
     .query('update [User] set Token=@AccessToken where Email=@Email', function(err, set) {
 
       if (err) console.log(err);
-      console.log(set);
+      console.log("New Set: ", set);
       // res.send(set);
     });
 
@@ -1097,13 +1100,15 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
       .query('select Id, Token from [User] where Email=@input', function (err, set) {
 
         if (err) console.log(err);
-        console.log(set);
+        console.log("Found Set: ", set);
 
         if (set.recordset[0].Token == null) {
           var newToken = crypto.createHash('sha256').update(access_token + new Date().toString()).digest('hex');
           set.recordset[0].Token = newToken;
           await setNewUserToken(email, newToken);
         }
+
+        console.log("Sending Set: ", set);
 
         res.send(set);
 
