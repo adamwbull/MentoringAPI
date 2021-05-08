@@ -1105,7 +1105,7 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
         if (set.recordset[0].Token == null) {
           var newToken = crypto.createHash('sha256').update(access_token + new Date().toString()).digest('hex');
           set.recordset[0].Token = newToken;
-          await setNewUserToken(email, newToken);
+          setNewUserToken(email, newToken);
         }
 
         console.log("Sending Set: ", set);
