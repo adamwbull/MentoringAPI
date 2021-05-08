@@ -1048,27 +1048,39 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 
 });
 
-async function setNewUserToken(email, access_token) {
+async function ensureUserTokenExists(email, linkedInToken) {
 
-  console.log("New Token: ", access_token);
-
-  await sql.connect(config, function (err) {
-
+  let hasToken = false;
+  await sql.connect(config, (err) => {
     if (err) console.log(err);
-
     var request = new sql.Request();
-
-    request
-    .input('AccessToken', sql.VarChar, access_token)
-    .input('Email', sql.VarChar, email)
-    .query('update [User] set Token=@AccessToken where Email=@Email', function(err, set) {
-
+    request.input('input', sql.VarChar, email)
+    .query('select Id, Token from [User] where Email=@input', (err, set) => {
       if (err) console.log(err);
-      console.log("New Set: ", set);
-      // res.send(set);
+      console.log("Found Set: ", set);
+      console.log("Sending Set: ", set);
+      hasToken = set.recordset[0].Token != null;
     });
-
   });
+
+  if (!hasToken) {
+    var newToken = crypto.createHash('sha256').update(linkedInToken + new Date().toString()).digest('hex');
+    console.log("New Token: ", newToken);
+    await sql.connect(config, (err) => {
+      if (err) console.log(err);
+      var request = new sql.Request();
+      request
+      .input('AccessToken', sql.VarChar, newToken)
+      .input('Email', sql.VarChar, email)
+      .query('update [User] set Token=@AccessToken where Email=@Email', (err, set) => {
+        if (err) console.log(err);
+        console.log("New Set: ", set);
+        hasToken = set.success;
+      });
+    }); 
+  }
+
+  return hasToken;
 }
 
 // GET User Id & Token Using LinkedInToken
@@ -1089,31 +1101,24 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
   console.log(emailPayload);
 
-  var email = emailPayload.elements[0]["handle~"].emailAddress; if (email) {
-    sql.connect(config, function (err) {
-      
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request.input('input', sql.VarChar, email)
-      .query('select Id, Token from [User] where Email=@input', function (err, set) {
-
+  var email = emailPayload.elements[0]["handle~"].emailAddress;
+  if (email) {
+    if (await ensureUserTokenExists(email, linkedInToken))
+    {
+      sql.connect(config, function (err) {
         if (err) console.log(err);
-        console.log("Found Set: ", set);
-
-        if (set.recordset[0].Token == null) {
-          var newToken = crypto.createHash('sha256').update(access_token + new Date().toString()).digest('hex');
-          set.recordset[0].Token = newToken;
-          setNewUserToken(email, newToken);
-        }
-
-        console.log("Sending Set: ", set);
-
-        res.send(set);
-
+        var request = new sql.Request();
+        request.input('input', sql.VarChar, email)
+        .query('select Id, Token from [User] where Email=@input', function (err, set) {
+          if (err) console.log(err);
+          console.log("Found Set: ", set);
+          console.log("Sending Set: ", set);
+          res.send(set);
+        });
       });
-    });
+    } else {
+      res.send({success:false});
+    }
   } else {
     res.send({success:false});
   }
