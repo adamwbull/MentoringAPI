@@ -1048,40 +1048,66 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 
 });
 
-async function ensureUserTokenExists(email, linkedInToken) {
+// Ensure User Exists
 
-  let hasToken = false;
+async function ensureUserTokenExists(email, tokenComponent) {
+  let hasToken = await userTokenExistsWrapper(email);
+  console.log("HasToken: ", hasToken);
+  if (!hasToken) {
+    hasToken = await setNewUserTokenWrapper(email, tokenComponent);
+  }
+  console.log("HasToken: ", hasToken);
+  return hasToken;
+}
+
+async function setNewUserToken(email, tokenComponent, callback) {
+  var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
+  console.log("New Token: ", newToken);
   await sql.connect(config, (err) => {
     if (err) console.log(err);
     var request = new sql.Request();
-    request.input('input', sql.VarChar, email)
-    .query('select Id, Token from [User] where Email=@input', (err, set) => {
+    request
+    .input('AccessToken', sql.VarChar, newToken)
+    .input('Email', sql.VarChar, email)
+    .query('update [User] set Token=@AccessToken where Email=@Email', (err, set) => {
       if (err) console.log(err);
-      console.log("Found Set: ", set);
-      hasToken = set.recordset[0].Token != null;
+      console.log("New Set: ", set);
+      callback(set.rowsAffected > 0);
+    });
+  }); 
+}
+
+async function setNewUserTokenWrapper(email, tokenComponent) {
+  return new Promise((resolve) => {
+      setNewUserToken(email,tokenComponent,(callback) => {
+          resolve(callback);
+      });
+  });
+}
+
+async function userTokenExists(email, callback) {
+  sql.connect(config, function (err) {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    request
+    .input('Email', sql.VarChar, email)
+    .query('select Token from [User] where Email=@Email', function (err, set) {
+      if (err) console.log(err);
+      if (set.recordset.length > 0) {
+        callback(true);
+      } else {
+        callback(false);
+      }
     });
   });
+}
 
-  console.log(hasToken);
-
-  if (!hasToken) {
-    var newToken = crypto.createHash('sha256').update(linkedInToken + new Date().toString()).digest('hex');
-    console.log("New Token: ", newToken);
-    await sql.connect(config, (err) => {
-      if (err) console.log(err);
-      var request = new sql.Request();
-      request
-      .input('AccessToken', sql.VarChar, newToken)
-      .input('Email', sql.VarChar, email)
-      .query('update [User] set Token=@AccessToken where Email=@Email', (err, set) => {
-        if (err) console.log(err);
-        console.log("New Set: ", set);
-        hasToken = set.success;
-      });
-    }); 
-  }
-
-  return hasToken;
+async function userTokenExistsWrapper(email) {
+    return new Promise((resolve) => {
+        userTokenExists(email,(callback) => {
+            resolve(callback);
+        });
+    });
 }
 
 // GET User Id & Token Using LinkedInToken
