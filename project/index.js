@@ -1058,10 +1058,11 @@ async function ensureUserTokenExists(email, linkedInToken) {
     .query('select Id, Token from [User] where Email=@input', (err, set) => {
       if (err) console.log(err);
       console.log("Found Set: ", set);
-      console.log("Sending Set: ", set);
       hasToken = set.recordset[0].Token != null;
     });
   });
+
+  console.log(hasToken);
 
   if (!hasToken) {
     var newToken = crypto.createHash('sha256').update(linkedInToken + new Date().toString()).digest('hex');
@@ -1111,15 +1112,16 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
         request.input('input', sql.VarChar, email)
         .query('select Id, Token from [User] where Email=@input', function (err, set) {
           if (err) console.log(err);
-          console.log("Found Set: ", set);
           console.log("Sending Set: ", set);
           res.send(set);
         });
       });
     } else {
+      console.log("Token does not exist...");
       res.send({success:false});
     }
   } else {
+    console.log("No valid email...");
     res.send({success:false});
   }
 });
