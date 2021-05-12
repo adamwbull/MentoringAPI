@@ -185,13 +185,14 @@ async function authorizePair(targetId, userId, token, callback) {
     .input('Token', sql.VarChar, token)
     .input('TargetId', sql.Int, targetId)
     .input('UserId', sql.Int, userId)
-    .query('select * from [Pair] full join [User] on Pair.MentorId=User.Id' +
+    .query('select * from [Pair] as P join [User] as U on P.MentorId=U.Id' +
                   ' where MentorId=@UserId and MenteeId=@TargetId and Token=@Token' +
           ' union' +
-          ' select * from [Pair] full join [User] on Pair.MenteeId=User.Id' +
+          ' select * from [Pair] as P join [User] as U on P.MenteeId=U.Id' +
                   ' where MenteeId=@UserId and MentorId=@TargetId and Token=@Token', function (err, set) {
 
       if (err) console.log(err);
+      console.log("Results: ", set);
       if (set.recordset.length > 0) {
         callback(true);
       } else {
