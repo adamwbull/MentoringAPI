@@ -174,6 +174,41 @@ async function authorizeAdminWrapper(token) {
     });
 }
 
+async function authorizePair(targetId, userId, token, callback) {
+
+  sql.connect(config, function (err) {
+
+    if (err) console.log(err);
+
+    var request = new sql.Request();
+    request
+    .input('Token', sql.VarChar, token)
+    .input('TargetId', sql.Int, targetId)
+    .input('UserId', sql.Int, userId)
+    .query('select * from [Pair] full join [User] on Pair.MentorId=User.Id' +
+                  ' where MentorId=@UserId and MenteeId=@TargetId and Token=@Token' +
+          ' union' +
+          ' select * from [Pair] full join [User] on Pair.MenteeId=User.Id' +
+                  ' where MenteeId=@UserId and MentorId=@TargetId and Token=@Token', function (err, set) {
+
+      if (err) console.log(err);
+      if (set.recordset.length > 0) {
+        callback(true);
+      } else {
+        callback(false);
+      }
+    });
+  });
+}
+
+async function authorizePairWrapper(targetId, userId, token) {
+    return new Promise((resolve) => {
+        authorizePair(targetId,userId,token,(callback) => {
+            resolve(callback);
+        });
+    });
+}
+
 // ------------------------------------- //
 //          Appointment Table            //
 // ------------------------------------- //
@@ -1148,6 +1183,34 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
     }
   } else {
     console.log("No valid email...");
+    res.send({success:false});
+  }
+});
+
+// GET Protected User by Id, UserId, Token
+app.get('/user/:TargetId/:UserId/:Token', async function (req, res) {
+
+  var targetId = req.params.TargetId;
+  var userId = req.params.UserId;
+  var token = req.params.Token;
+
+  var check = await authorizePairWrapper(targetId, userId, token); if (check) {
+    sql.connect(config, function (err) {
+
+      if (err) console.log(err);
+
+      var request = new sql.Request();
+
+      request.input('targetId', sql.Int, targetId)
+      .query('select FirstName,LastName,Email,Avatar,Id from [User] where Id=@targetId', function (err, set) {
+
+        if (err) console.log(err);
+        res.send(set);
+
+      });
+
+    });
+  } else {
     res.send({success:false});
   }
 });
