@@ -10,6 +10,7 @@ const fetch = require('node-fetch');
 var bodyParser = require("body-parser");
 var sql = require("mssql");
 var cors = require("cors");
+var crypto = require("crypto")
 var app = express();
 const { Expo } = require("expo-server-sdk");
 let expo = new Expo({ accessToken: 'ZVKBleGrwLvwoTIHftrSFjseb9TSpaljblPjMh_q' });
@@ -993,6 +994,8 @@ app.post('/delete-topic', async function(req, res) {
 //              User Table               //
 // ------------------------------------- //
 
+
+
 // GET all Users
 app.get('/all-users/:Token', async function (req, res) {
 
@@ -1045,6 +1048,68 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 
 });
 
+// Ensure User Exists
+
+async function ensureUserTokenExists(email, tokenComponent) {
+  let hasToken = await userTokenExistsWrapper(email);
+  console.log("HasToken: ", hasToken);
+  if (!hasToken) {
+    hasToken = await setNewUserTokenWrapper(email, tokenComponent);
+  }
+  console.log("HasToken: ", hasToken);
+  return hasToken;
+}
+
+async function setNewUserToken(email, tokenComponent, callback) {
+  var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
+  console.log("New Token: ", newToken);
+  await sql.connect(config, (err) => {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    request
+    .input('AccessToken', sql.VarChar, newToken)
+    .input('Email', sql.VarChar, email)
+    .query('update [User] set Token=@AccessToken where Email=@Email', (err, set) => {
+      if (err) console.log(err);
+      console.log("New Set: ", set);
+      callback(set.rowsAffected > 0);
+    });
+  }); 
+}
+
+async function setNewUserTokenWrapper(email, tokenComponent) {
+  return new Promise((resolve) => {
+      setNewUserToken(email,tokenComponent,(callback) => {
+          resolve(callback);
+      });
+  });
+}
+
+async function userTokenExists(email, callback) {
+  sql.connect(config, function (err) {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    request
+    .input('Email', sql.VarChar, email)
+    .query('select Token from [User] where Email=@Email', function (err, set) {
+      if (err) console.log(err);
+      if (set.recordset.length > 0) {
+        callback(true);
+      } else {
+        callback(false);
+      }
+    });
+  });
+}
+
+async function userTokenExistsWrapper(email) {
+    return new Promise((resolve) => {
+        userTokenExists(email,(callback) => {
+            resolve(callback);
+        });
+    });
+}
+
 // GET User Id & Token Using LinkedInToken
 app.get('/user/access/:LinkedInToken', async function (req, res)
 {
@@ -1063,23 +1128,26 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
   console.log(emailPayload);
 
-  var email = emailPayload.elements[0]["handle~"].emailAddress; if (email) {
-    sql.connect(config, function (err) {
-      
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request.input('input', sql.VarChar, email)
-      .query('select Id, Token from [User] where Email=@input', function (err, set) {
-
+  var email = emailPayload.elements[0]["handle~"].emailAddress;
+  if (email) {
+    if (await ensureUserTokenExists(email, linkedInToken))
+    {
+      sql.connect(config, function (err) {
         if (err) console.log(err);
-        console.log(set);
-        res.send(set);
-
+        var request = new sql.Request();
+        request.input('input', sql.VarChar, email)
+        .query('select Id, Token from [User] where Email=@input', function (err, set) {
+          if (err) console.log(err);
+          console.log("Sending Set: ", set);
+          res.send(set);
+        });
       });
-    });
+    } else {
+      console.log("Token does not exist...");
+      res.send({success:false});
+    }
   } else {
+    console.log("No valid email...");
     res.send({success:false});
   }
 });
