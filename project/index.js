@@ -277,6 +277,10 @@ app.get('/appointment/past/:PairId/:UserId/:Token', async function(req, res) {
   var token = req.params.Token;
   var date = new Date();
 
+  if (pairId == undefined || userId == undefined || token == undefined) {
+    res.send({success:false, undefinedValues:true})
+  }
+
   var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
 
