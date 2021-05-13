@@ -82,6 +82,8 @@ async function authorizeMatch(id, token, callback) {
 
     if (err) console.log(err);
 
+    console.log(id, token);
+
     var request = new sql.Request();
     request
     .input('Token', sql.VarChar, token)
@@ -246,6 +248,10 @@ app.get('/appointment/upcoming/:PairId/:UserId/:Token', async function(req, res)
   var token = req.params.Token;
   var userId = req.params.UserId;
   var date = new Date();
+
+  if (pairId == undefined || userId == undefined || token == undefined) {
+    res.send({success:false, undefinedValues:true})
+  }
 
   var check = await authorizeMatchWrapper(userId, token); if (check) {
     sql.connect(config, function (err) {
