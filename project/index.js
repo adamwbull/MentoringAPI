@@ -1199,7 +1199,7 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 });
 
 // GET Protected User by Id, UserId, Token
-app.get('/user/:TargetId/:UserId/:Token', async function (req, res) {
+/* app.get('/user/:TargetId/:UserId/:Token', async function (req, res) {
 
   var targetId = req.params.TargetId;
   var userId = req.params.UserId;
@@ -1224,10 +1224,10 @@ app.get('/user/:TargetId/:UserId/:Token', async function (req, res) {
   } else {
     res.send({success:false});
   }
-});
+}); */
 
 // GET User by Email
-app.get('/user/email/:Email/:Token', async function(req, res) {
+app.get('/user-via-email/:Email/:Token', async function(req, res) {
 
   var email = req.params.Email;
   var token = req.params.Token;

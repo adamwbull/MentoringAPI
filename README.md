@@ -134,7 +134,7 @@ A table containing user profile information.
 
 **/user/access/:LinkedInToken** - Returns user Id, Token by LinkedInToken.
 
-**/user/email/:Email/:Token** - Returns user Id by Email, Token.
+**/user-via-email/:Email/:Token** - Returns user Id by Email, Token.
 
 ### User POST
 **/create-user** - Provide Token, Email, FirstName, LastName, Avatar, ExpoPushToken, PrivacyAccepted.
