@@ -5,6 +5,22 @@ If a route is bolded in the sections below, it has been implemented. Italics are
 
 **PLEASE NOTE**: Database stores times in UTC.
 
+## Admin Table
+A table containing admin users that can access the dashboard.
+
+### Admin Structure
+* Id (PK, int)
+* Email (nvarchar(MAX))
+* Password (nvarchar(MAX))
+* FirstName (nvarchar(MAX))
+* LastName (nvarchar(MAX))
+* Token (nvarchar(MAX))
+
+### Admin GET
+
+### Admin POST
+*/admin/verify-login* - Provide Email, Password, Token.
+
 ## Appointment Table
 A table containing appointments scheduled between a mentor/mentee pair.
 

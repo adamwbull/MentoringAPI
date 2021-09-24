@@ -152,7 +152,7 @@ async function authorizeAdmin(token, callback) {
     var request = new sql.Request();
     request
     .input('Token', sql.VarChar, token)
-    .query('select * from [User] where Token=@Token and Type=1', function (err, set) {
+    .query('select * from [Admin] where Token=@Token', function (err, set) {
 
       if (err) console.log(err);
       console.log(set);
@@ -211,6 +211,53 @@ async function authorizePairWrapper(targetId, userId, token) {
         });
     });
 }
+
+// ------------------------------------- //
+//             Admin Table               //
+// ------------------------------------- //
+
+app.post('/admin/verify-login', async function(req, res) {
+
+  var email = req.body.Email
+  var password = req.body.Password
+  var token = req.body.Token
+
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
+    sql.connect(config, function (err) {
+
+      if (err) console.log(err);
+
+      var request = new sql.Request();
+
+      request
+      .input('Email', sql.VarChar, email)
+      .input('Password', sql.VarChar, password)
+      .query('select * from [Admin] where Email=@Email and Password=@Password', function(err, set) {
+
+        if (err) {
+          console.log(err)
+        } else {
+          // Check if this user is valid.
+          if (set.length == 1) {
+            res.send({success:true,Admin:set[0]})
+          } else {
+            res.send({success:false})
+            // TODO: This user's token may be compromised. Do something about that.
+          }
+        }
+
+      })
+
+    })
+  } else {
+
+   res.send({success:false})
+
+  }
+
+});
 
 // ------------------------------------- //
 //          Appointment Table            //
