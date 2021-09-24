@@ -240,6 +240,7 @@ app.post('/admin/verify-login', async function(req, res) {
           console.log(err)
         } else {
           // Check if this user is valid.
+          console.log('login set:',set)
           if (set.length == 1) {
             res.send({success:true,Admin:set[0]})
           } else {
