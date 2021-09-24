@@ -222,7 +222,7 @@ app.post('/admin/verify-login', async function(req, res) {
   var password = req.body.Password
   var token = req.body.Token
 
-  var check = await authorizeAdminWrapper(token); 
+  var check = await authorizeExistsWrapper(token); 
   
   if (check) {
     sql.connect(config, function (err) {
@@ -243,8 +243,7 @@ app.post('/admin/verify-login', async function(req, res) {
           if (set.length == 1) {
             res.send({success:true,Admin:set[0]})
           } else {
-            res.send({success:false})
-            // TODO: This user's token may be compromised. Do something about that.
+            res.send({success:false,errorCode:2})
           }
         }
 
@@ -253,7 +252,7 @@ app.post('/admin/verify-login', async function(req, res) {
     })
   } else {
 
-   res.send({success:false})
+   res.send({success:false,errorCode:1})
 
   }
 
