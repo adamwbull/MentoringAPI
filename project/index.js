@@ -204,6 +204,7 @@ async function authorizePair(targetId, userId, token, callback) {
   });
 }
 
+// Checks if user has access to information of another user. (are they paired?)
 async function authorizePairWrapper(targetId, userId, token) {
     return new Promise((resolve) => {
         authorizePair(targetId,userId,token,(callback) => {
@@ -1141,8 +1142,7 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 
 });
 
-// Ensure User Exists
-
+// Checks if a user token exists, and if it doesn't, sets a new user token.
 async function ensureUserTokenExists(email, tokenComponent) {
   let hasToken = await userTokenExistsWrapper(email);
   console.log("HasToken: ", hasToken);
@@ -1153,6 +1153,7 @@ async function ensureUserTokenExists(email, tokenComponent) {
   return hasToken;
 }
 
+// Set a new user token.
 async function setNewUserToken(email, tokenComponent, callback) {
   var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
   console.log("New Token: ", newToken);
@@ -1170,6 +1171,7 @@ async function setNewUserToken(email, tokenComponent, callback) {
   }); 
 }
 
+// Wrapper for setting a new user token.
 async function setNewUserTokenWrapper(email, tokenComponent) {
   return new Promise((resolve) => {
       setNewUserToken(email,tokenComponent,(callback) => {
@@ -1178,6 +1180,7 @@ async function setNewUserTokenWrapper(email, tokenComponent) {
   });
 }
 
+// Check if a user token exists.
 async function userTokenExists(email, callback) {
   sql.connect(config, function (err) {
     if (err) console.log(err);
@@ -1195,6 +1198,7 @@ async function userTokenExists(email, callback) {
   });
 }
 
+// Wrapper for checking if a user token exists.
 async function userTokenExistsWrapper(email) {
     return new Promise((resolve) => {
         userTokenExists(email,(callback) => {
@@ -1245,8 +1249,8 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
   }
 });
 
-// GET Protected User by Id, UserId, Token
-/* app.get('/user/:TargetId/:UserId/:Token', async function (req, res) {
+// GET Other User by Id, UserId, Token
+app.get('/user/other/:TargetId/:UserId/:Token', async function (req, res) {
 
   var targetId = req.params.TargetId;
   var userId = req.params.UserId;
@@ -1271,7 +1275,7 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
   } else {
     res.send({success:false});
   }
-}); */
+});
 
 // GET User by Email
 app.get('/user-via-email/:Email/:Token', async function(req, res) {

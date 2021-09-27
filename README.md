@@ -150,6 +150,8 @@ A table containing user profile information.
 
 **/user/access/:LinkedInToken** - Returns user Id, Token by LinkedInToken.
 
+**/user/other/:TargetId/:UserId/:Token** - Returns valid paired user's FirstName, LastName, Email, Avatar, and Id by TargetId and UserId, provide Token.
+
 **/user-via-email/:Email/:Token** - Returns user Id by Email, Token.
 
 ### User POST
