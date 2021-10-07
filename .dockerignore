@@ -1,2 +1,4 @@
 node_modules
+project/node_modules
 npm-debug.log
+project/npm-debug.log
