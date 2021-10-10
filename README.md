@@ -118,6 +118,8 @@ A table containing topics for meeting discussions.
 
 **/all-topics/:UserId/:Token** - Returns all topics from newest to oldest, except where ActiveTopic=1.
 
+*/all-topics-admin/:UserId/:Token* - Returns all topics from newest to oldest.
+
 **/topic/:Id/:UserId/:Token** - Returns topic by Id.
 
 ### Topic POST

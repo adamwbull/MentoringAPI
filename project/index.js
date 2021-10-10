@@ -910,7 +910,9 @@ app.get('/all-topics/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
     sql.connect(config, function (err) {
 
       if (err) console.log(err);
