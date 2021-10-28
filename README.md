@@ -1,9 +1,9 @@
 # MentoringAPI Documentation
 Below is detailed information on accessing or posting data to the API, broken up by database table.
 
-If a route is bolded in the sections below, it has been implemented. Italics are planned but not up and running yet. Current web address is **mentorship.cs.wwu.edu**
+If a route is bolded in the sections below, it has been implemented. Italics are planned but not up and running yet. Current web address is *mentorship.cs.wwu.edu*
 
-**PLEASE NOTE**: Database stores times in UTC.
+*PLEASE NOTE*: Database stores times in UTC.
 
 ## Admin Table
 A table containing admin users that can access the dashboard.
@@ -34,18 +34,18 @@ A table containing appointments scheduled between a mentor/mentee pair.
 * LastUpdate (smalldatetime)
 
 ### Appointment GET
-**/all-appointments/:Token** - Returns all appointments in table. Provide admin Token.
+*/all-appointments/:Token* - Returns all appointments in table. Provide admin Token.
 
-**/appointment/upcoming/:PairId/:UserId/:Token** - Returns all appointments between specified pair where ScheduledAt is in the future.
+*/appointment/upcoming/:PairId/:UserId/:Token* - Returns all appointments between specified pair where ScheduledAt is in the future.
 
-**/appointment/past/:PairId/:UserId/:Token** - Returns all appointments between specified pair where ScheduledAt is in the past.
+*/appointment/past/:PairId/:UserId/:Token* - Returns all appointments between specified pair where ScheduledAt is in the past.
 
-**/appointment/:Id/:UserId/:Token** - Returns appointment matching Id.
+*/appointment/:Id/:UserId/:Token* - Returns appointment matching Id.
 
 ### Appointment POST
-**/create-appointment** - Provide PairId, ScheduledAt, TopicId, UserId, Token.
+*/create-appointment* - Provide PairId, ScheduledAt, TopicId, UserId, Token.
 
-**/update-appointment-status** - Provide Id, Status, UserId, Token.
+*/update-appointment-status* - Provide Id, Status, UserId, Token.
 
 ## AppointmentSummary Table
 A table containing summaries written for a particular appointment by a certain user.
@@ -60,20 +60,20 @@ A table containing summaries written for a particular appointment by a certain u
 * LastUpdate (smalldatetime)
 
 ### AppointmentSummary GET
-**/all-summaries/:Token** - Returns all submitted summaries that are PrivacyAccepted.
+*/all-summaries/:Token* - Returns all submitted summaries that are PrivacyAccepted.
 
-**/summary/pair/:PairId/:UserId/:Token** - Returns all summaries written by members of a certain pair.
+*/summary/pair/:PairId/:UserId/:Token* - Returns all summaries written by members of a certain pair.
 
-**/summary/user/:UserId/:Token** - Returns all summaries written by a user.
+*/summary/user/:UserId/:Token* - Returns all summaries written by a user.
 
-**/summary/appointment/:AppointmentId/:UserId/:Token** - Returns all summaries for a particular meeting.
+*/summary/appointment/:AppointmentId/:UserId/:Token* - Returns all summaries for a particular meeting.
 
 ### AppointmentSummary POST
-**/create-summary** - Provide AppointmentId, SummaryText, UserId, Token.
+*/create-summary* - Provide AppointmentId, SummaryText, UserId, Token.
 
-**/update-summary** - Provide AppointmentId, SummaryText, UserId, Token.
+*/update-summary* - Provide AppointmentId, SummaryText, UserId, Token.
 
-**/delete-summary** - Provide AppointmentId, UserId, Token.
+*/delete-summary* - Provide AppointmentId, UserId, Token.
 
 ## Pair Table
 A table containing mentor/mentee pairs.
@@ -87,18 +87,18 @@ A table containing mentor/mentee pairs.
 * PrivacyAccepted (int, 0/1)
 
 ### Pair GET
-**/pair/mentor/:MentorId/:UserId/:Token** - Returns Pair by MentorId.
+*/pair/mentor/:MentorId/:UserId/:Token* - Returns Pair by MentorId.
 
-**/pair/mentee/:MenteeId/:UserId/:Token** - Returns Pair by MenteeId.
+*/pair/mentee/:MenteeId/:UserId/:Token* - Returns Pair by MenteeId.
 
-**/pair/both/:MentorId/:MenteeId/:UserId/:Token** - Returns pair if exists for these users.
+*/pair/both/:MentorId/:MenteeId/:UserId/:Token* - Returns pair if exists for these users.
 
-**/pair/:UserId/:Token** - Returns all Pairs that UserId is a part of.
+*/pair/:UserId/:Token* - Returns all Pairs that UserId is a part of.
 
 ### Pair POST
-**/create-pair** - Provide MentorId, MenteeId, admin Token.
+*/create-pair* - Provide MentorId, MenteeId, admin Token.
 
-**/delete-pair** - Provide Id, admin Token.
+*/delete-pair* - Provide Id, admin Token.
 
 ## Topic Table
 A table containing topics for meeting discussions.
@@ -114,20 +114,20 @@ A table containing topics for meeting discussions.
 * ActiveTopic (int)
 
 ### Topic GET
-**/current-topic/:UserId/:Token** - Returns the topic with ActiveTopic=1.
+*/current-topic/:UserId/:Token* - Returns the topic with ActiveTopic=1.
 
-**/all-topics/:UserId/:Token** - Returns all topics from newest to oldest, except where ActiveTopic=1.
+*/all-topics/:UserId/:Token* - Returns all topics from newest to oldest, except where ActiveTopic=1.
 
 */all-topics-admin/:UserId/:Token* - Returns all topics from newest to oldest.
 
-**/topic/:Id/:UserId/:Token** - Returns topic by Id.
+*/topic/:Id/:UserId/:Token* - Returns topic by Id.
 
 ### Topic POST
-**/create-topic** - Provide PostedBy, DueDate, Title, Description.
+*/create-topic* - Provide PostedBy, DueDate, Title, Description.
 
-**/update-topic** - Provide Id, PostedBy, DueDate, Title, Description, ActiveTopic.
+*/update-topic* - Provide Id, PostedBy, DueDate, Title, Description, ActiveTopic.
 
-**/delete-topic** - Provide Id.
+*/delete-topic* - Provide Id.
 
 ## User Table
 A table containing user profile information.
@@ -146,26 +146,26 @@ A table containing user profile information.
 * Approved (int, 0/1)
 
 ### User GET
-**/all-users/:Token** - Provide admin Token.
+*/all-users/:Token* - Provide admin Token.
 
-**/user/id/:UserId/:Token** - Returns user by Id, provide Token.
+*/user/id/:UserId/:Token* - Returns user by Id, provide Token.
 
-**/user/access/:LinkedInToken** - Returns user Id, Token by LinkedInToken.
+*/user/access/:LinkedInToken* - Returns user Id, Token by LinkedInToken.
 
-**/user/other/:TargetId/:UserId/:Token** - Returns valid paired user's FirstName, LastName, Email, Avatar, and Id by TargetId and UserId, provide Token.
+*/user/other/:TargetId/:UserId/:Token* - Returns valid paired user's FirstName, LastName, Email, Avatar, and Id by TargetId and UserId, provide Token.
 
-**/user-via-email/:Email/:Token** - Returns user Id by Email, Token.
+*/user-via-email/:Email/:Token* - Returns user Id by Email, Token.
 
 ### User POST
-**/create-user** - Provide Token, Email, FirstName, LastName, Avatar, ExpoPushToken, PrivacyAccepted.
+*/create-user* - Provide Token, Email, FirstName, LastName, Avatar, ExpoPushToken, PrivacyAccepted.
 
 */update-expo-push-token* - Provide Email of user, ExpoPushToken, UserId, Token.
 
-**/update-privacy** - Provide Email, PrivacyAccepted, Token.
+*/update-privacy* - Provide Email, PrivacyAccepted, Token.
 
-**/update-approved** - Provide Email, Approved, UserId, Token.
+*/update-approved* - Provide Email, Approved, UserId, Token.
 
-**/delete-user** - Provide Id, Token.
+*/delete-user* - Provide Id, Token.
 
 ## UserContact Table
 A table containing contact info for users.
@@ -179,11 +179,11 @@ A table containing contact info for users.
 * LastUpdate (smalldatetime)
 
 ### UserContact GET
-**/contact/:UserId/:Token** - Returns all contact info for a UserId. Provide existing Token.
+*/contact/:UserId/:Token* - Returns all contact info for a UserId. Provide existing Token.
 
 ### UserContact POST
-**/create-contact** - Provide UserId, Token, ContactValue, ContactType.
+*/create-contact* - Provide UserId, Token, ContactValue, ContactType.
 
-**/update-contact** - Provide Id, UserId, Token, ContactValue, ContactType.
+*/update-contact* - Provide Id, UserId, Token, ContactValue, ContactType.
 
-**/delete-contact** - Provide Id.
+*/delete-contact* - Provide Id.
