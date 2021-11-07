@@ -112,6 +112,7 @@ A table containing topics for meeting discussions.
 * Created (smalldatetime)
 * LastUpdate (smalldatetime)
 * ActiveTopic (int)
+* Archived (int)
 
 ### Topic GET
 */current-topic/:UserId/:Token* - Returns the topic with ActiveTopic=1.
@@ -166,24 +167,3 @@ A table containing user profile information.
 */update-approved* - Provide Email, Approved, UserId, Token.
 
 */delete-user* - Provide Id, Token.
-
-## UserContact Table
-A table containing contact info for users.
-
-### UserContact Structure
-* Id (PK, int)
-* UserId (int)
-* ContactValue (nvarchar(max))
-* ContactType (nvarchar(15)) Should be *Email*, *Phone*, or *LinkedIn*.
-* Created (smalldatetime)
-* LastUpdate (smalldatetime)
-
-### UserContact GET
-*/contact/:UserId/:Token* - Returns all contact info for a UserId. Provide existing Token.
-
-### UserContact POST
-*/create-contact* - Provide UserId, Token, ContactValue, ContactType.
-
-*/update-contact* - Provide Id, UserId, Token, ContactValue, ContactType.
-
-*/delete-contact* - Provide Id.

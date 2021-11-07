@@ -8,7 +8,7 @@ Localtunnel: lt --port 80* --subdomain mshipapp
 var express = require("express");
 const fetch = require('node-fetch');
 var bodyParser = require("body-parser");
-var sql = require("mssql");
+var sql = require("mysql");
 var cors = require("cors");
 var crypto = require("crypto")
 var app = express();
@@ -23,7 +23,10 @@ var router = express.Router();
 
 app.use('/api', router);
 
+// SQL configuration.
 var config = require('./config.js');
+
+var pool = sql.createPool(config.databaseOptions);
 
 // ------------------------------------- //
 //             Notifications             //
@@ -76,36 +79,22 @@ async function sendMessagesNotification(pushTokens, title, body, sound, data) {
 //            Token Securing             //
 // ------------------------------------- //
 
-async function authorizeMatch(id, token, callback) {
+async function authorizeMatch(token, arr, callback) {
 
-  sql.connect(config, function (err) {
+  var check = "select Id from User where Token=? and Id=?";
+  var auth = -1;
 
-    if (err) console.log(err);
-
-    console.log(id, token);
-
-    var request = new sql.Request();
-    request
-    .input('Token', sql.VarChar, token)
-    .input('Id', sql.Int, id)
-    .query('select * from [User] where Token=@Token and Id=@Id', function (err, set) {
-
-      if (err) console.log(err);
-      if (set.recordset.length > 0) {
-        callback(true);
-      } else {
-        callback(false);
-      }
-
-    });
-
+  pool.query(check, [token, arr[0]], function (error, results, fields) {
+      if (error) throw error;
+      auth = results.length;
+      callback(auth);
   });
 
 }
 
-async function authorizeMatchWrapper(id, token) {
+async function authorizeMatchWrapper(token, arr) {
     return new Promise((resolve) => {
-        authorizeMatch(id,token,(callback) => {
+        authorizeMatch(token,arr,(callback) => {
             resolve(callback);
         });
     });
@@ -113,24 +102,13 @@ async function authorizeMatchWrapper(id, token) {
 
 async function authorizeExists(token, callback) {
 
-  sql.connect(config, function (err) {
-
-    if (err) console.log(err);
-
-    var request = new sql.Request();
-    request
-    .input('Token', sql.VarChar, token)
-    .query('select * from [User] where Token=@Token', function (err, set) {
-
-      if (err) console.log(err);
-      if (set.recordset.length > 0) {
-        callback(true);
-      } else {
-        callback(false);
-      }
-
-    });
-
+  var check = "select Id from User where Token=?";
+  var auth = -1;
+  
+  pool.query(check, [token], function (error, results, fields) {
+      if (error) throw error;
+      auth = results.length;
+      callback(auth);
   });
 
 }
@@ -145,25 +123,13 @@ async function authorizeExistsWrapper(token) {
 
 async function authorizeAdmin(token, callback) {
 
-  sql.connect(config, function (err) {
-
-    if (err) console.log(err);
-
-    var request = new sql.Request();
-    request
-    .input('Token', sql.VarChar, token)
-    .query('select * from [Admin] where Token=@Token', function (err, set) {
-
-      if (err) console.log(err);
-      console.log(set);
-      if (set.recordset.length > 0) {
-        callback(true);
-      } else {
-        callback(false);
-      }
-
-    });
-
+  var check = "select Id from Admin where Token=?";
+  var auth = -1;
+  
+  pool.query(check, [token], function (error, results, fields) {
+      if (error) throw error;
+      auth = results.length;
+      callback(auth);
   });
 
 }
@@ -178,6 +144,16 @@ async function authorizeAdminWrapper(token) {
 
 async function authorizePair(targetId, userId, token, callback) {
 
+  var check = "select * from Pair where (MentorId=? and MenteeId=?) or (MentorId=? and MenteeId=?)";
+  var auth = -1;
+  
+  pool.query(check, [targetId, userId, targetId, userId], function (error, results, fields) {
+      if (error) throw error;
+      auth = results.length;
+      callback(auth);
+  });
+
+  /*
   sql.connect(config, function (err) {
 
     if (err) console.log(err);
@@ -202,6 +178,8 @@ async function authorizePair(targetId, userId, token, callback) {
       }
     });
   });
+  */
+
 }
 
 // Checks if user has access to information of another user. (are they paired?)
@@ -211,6 +189,21 @@ async function authorizePairWrapper(targetId, userId, token) {
             resolve(callback);
         });
     });
+}
+
+async function execute_async (q, a) {
+  return await new Promise(function(resolve,reject){
+    pool.query(
+      q,
+      a,
+      function (error, results, fields) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results)
+        }
+      })
+  })
 }
 
 // ------------------------------------- //
@@ -226,32 +219,15 @@ app.post('/admin/verify-login', async function(req, res) {
   var check = await authorizeExistsWrapper(token); 
   
   if (check) {
-    sql.connect(config, function (err) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Admin where Email=? and Password=?', [email, password])
 
-      var request = new sql.Request();
-
-      request
-      .input('Email', sql.VarChar, email)
-      .input('Password', sql.VarChar, password)
-      .query('select * from [Admin] where Email=@Email and Password=@Password', function(err, set) {
-
-        if (err) {
-          console.log(err)
-        } else {
-          // Check if this user is valid.
-          console.log('login set:',set)
-          if (set.recordset.length == 1) {
-            res.send({success:true,Admin:set.recordset[0]})
-          } else {
-            res.send({success:false,errorCode:2})
-          }
-        }
-
-      })
-
-    })
+    if (data.length > 0) {
+      res.send({success:true,Admin:data[0]})
+    } else {
+      res.send({success:false,errorCode:2})
+    }
+    
   } else {
 
    res.send({success:false,errorCode:1})
@@ -269,20 +245,13 @@ app.get('/all-appointments/:Token', async function (req, res) {
 
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Appointment', [])
+    res.send(data)
 
-      var request = new sql.Request();
-      request.query('select * from [Appointment]', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
     res.send({success:false});
   }
@@ -301,23 +270,13 @@ app.get('/appointment/upcoming/:PairId/:UserId/:Token', async function(req, res)
     res.send({success:false, undefinedValues:true})
   }
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Appointment where PairId=? and ScheduledAt>=?', [pairId, date])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, pairId)
-      .input('date', sql.SmallDateTime, date)
-      .query('select * from [Appointment] where PairId=@input and ScheduledAt>=@date', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
     res.send({success:false});
   }
@@ -335,23 +294,13 @@ app.get('/appointment/past/:PairId/:UserId/:Token', async function(req, res) {
     res.send({success:false, undefinedValues:true})
   }
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Appointment where PairId=? and ScheduledAt<=?', [pairId, date])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, pairId)
-      .input('date', sql.SmallDateTime, date)
-      .query('select * from [Appointment] where PairId=@input and ScheduledAt<=@date', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
     res.send({success:false});
   }
@@ -364,22 +313,13 @@ app.get('/appointment/:Id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Appointment where Id=?', [id])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, id)
-      .query('select * from [Appointment] where Id=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
     res.send({success:false});
   }
@@ -396,57 +336,24 @@ app.post('/create-appointment', async function(req, res) {
   var date = new Date();
   var topicId = req.body.TopicId;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var pairData = await execute_async('select MentorId from Pair where MenteeId=? and Id=?', [userId, pairId])
+    var mentorId = pairData[0].MentorId
 
-      var pairRequest = new sql.Request();
+    var mentorData = await execute_async('select ExpoPushToken from User where Id=?', [mentorId])
+    var expoPushToken = mentorData[0].ExpoPushToken
 
-      pairRequest.input('PairId', sql.Int, pairId)
-      .input('Id', sql.Int, userId)
-      .query('select MentorId from [Pair] where MenteeId=@Id and Id=@PairId', function (err, set) {
+    // Send message notification.
+    var pushTokens = [expoPushToken];
+    sendMessagesNotification(pushTokens, 'New Appointment', 'Your mentee proposed a new appointment!', true, {Screen:'MeetingsScreen'})
 
-        if (err) console.log(err);
-        var mentorId = set.recordset[0].MentorId;
+    // Create meeting.
+    var insert = await execute_async('insert into Appointment set ?', {PairId:pairId, ScheduledAt:scheduledAt, Status:'Pending',Created:date,LastUpdate:date,TopicId:topicId})
+    res.send(insert)
 
-        var mentorRequest = new sql.Request();
-
-        mentorRequest.input('Id', sql.Int, mentorId)
-        .query('select ExpoPushToken from [User] where Id=@Id', async function (err, set) {
-
-          if (err) console.log(err);
-          var expoPushToken = set.recordset[0].ExpoPushToken;
-          var pushTokens = [expoPushToken];
-          sendMessagesNotification(pushTokens, 'New Appointment', 'Your mentee proposed a new appointment!', true, {Screen:'MeetingsScreen'})
-          var request = new sql.Request();
-
-          request
-          .input('PairId', sql.Int, pairId)
-          .input('ScheduledAt', sql.SmallDateTime, scheduledAt)
-          .input('Status', sql.VarChar(12), 'Pending')
-          .input('Created', sql.SmallDateTime, date)
-          .input('LastUpdate', sql.SmallDateTime, date)
-          .input('TopicId', sql.Int, topicId)
-          .query('insert into [Appointment] (PairId, ScheduledAt, Status, Created, LastUpdate, TopicId)'
-           + ' values (@PairId, @ScheduledAt, @Status, @Created, @LastUpdate, @TopicId)', async function(err, set) {
-
-             if (err) {
-               console.log(err);
-             } else {
-               if (Expo.isExpoPushToken(expoPushToken))
-                 await sendPushNotification(expoPushToken, 'Your mentee has proposed a new meeting!');
-             }
-
-             res.send(set);
-
-           });
-
-        });
-
-      });
-
-    });
   } else {
     res.send({success:false});
   }
@@ -460,26 +367,17 @@ app.post('/update-appointment-status', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var update = await execute_async('update Appointment set Status=? where Id=?', [status, id])
+    res.send(update)
 
-      var request = new sql.Request();
-
-      request
-      .input('Status', sql.VarChar(12), status)
-      .input('Id', sql.Int, id)
-      .query('update [Appointment] set Status=@Status where Id=@Id', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -492,24 +390,17 @@ app.get('/all-summaries/:Token', async function(req, res) {
 
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from AppointmentSummary where PairId in (select Id from Pair where PrivacyAccepted=1)')
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request
-      .query('select * from [AppointmentSummary] where PairId in (select Id from Pair where PrivacyAccepted=1)', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -520,24 +411,17 @@ app.get('/summary/pair/:PairId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from AppointmentSummary where PairId=?', pairId)
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, pairId)
-      .query('select * from [AppointmentSummary] where PairId=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 
@@ -548,24 +432,17 @@ app.get('/summary/user/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  f (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from AppointmentSummary where UserId=?', [userId])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, userId)
-      .query('select * from [AppointmentSummary] where UserId=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -576,24 +453,17 @@ app.get('/summary/appointment/:AppointmentId/:UserId/:Token', async function(req
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from AppointmentSummary where AppointmentId=?', [appointmentId])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, appointmentId)
-      .query('select * from [AppointmentSummary] where AppointmentId=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -606,30 +476,17 @@ app.post('/create-summary', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
-
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request
-      .input('AppointmentId', sql.Int, appointmentId)
-      .input('SummaryText', sql.VarChar, summaryText)
-      .input('UserId', sql.Int, userId)
-      .input('Status', sql.VarChar, "Submitted")
-      .input('Created', sql.SmallDateTime, date)
-      .input('LastUpdate', sql.SmallDateTime, date)
-      .query('insert into [AppointmentSummary] (AppointmentId, SummaryText, UserId, Status, Created, LastUpdate) values (@AppointmentId, @SummaryText, @UserId, @Status, @Created, @LastUpdate)', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
+    
+    var insert = await execute_async('insert into AppointmentSummary set ?', {AppointmentId:appointmentId, SummaryText:summaryText, UserId:userId, Status:'Submitted', Created:date, LastUpdate:date})
+    res.send(insert)
+ 
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -642,29 +499,17 @@ app.post('/update-summary', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request
-      .input('AppointmentId', sql.Int, appointmentId)
-      .input('SummaryText', sql.VarChar, summaryText)
-      .input('UserId', sql.Int, userId)
-      .input('Status', sql.VarChar, 'Edited')
-      .input('LastUpdate', sql.SmallDateTime, date)
-      .query('update [AppointmentSummary] set SummaryText=@SummaryText, LastUpdate=@LastUpdate, Status=@Status where AppointmentId=@AppointmentId and UserId=@UserId', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
+    var update = await execute_async('update AppointmentSummary set SummaryText=?, LastUpdate=?, Status=? where AppointmentId=? and UserId=?', [summaryText, date, 'Edited', appointmentId, userId])
+    res.send(update)
+  
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -678,24 +523,17 @@ app.get('/pair/:UserId/:Token', async function(req, res) {
   var id = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(id, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(id, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Pair where MentorId=? or MenteeId=?', [id, id])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, id)
-      .query('select * from [Pair] where MentorId=@input or Menteeid=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -707,25 +545,17 @@ app.get('/pair/both/:MentorId/:MenteeId/:UserId/:Token', async function(req, res
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Pair where MentorId=? and MenteeId=?', [mentorId, menteeId])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('Mentor', sql.Int, mentorId)
-      .input('Mentee', sql.Int, menteeId)
-      .query('select * from [Pair] where MentorId=@Mentor and MenteeId=@Mentee', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -736,24 +566,17 @@ app.get('/pair/mentor/:MentorId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Pair where MentorId=?', [mentorId])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, mentorId)
-      .query('select * from [Pair] where MentorId=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -764,24 +587,17 @@ app.get('/pair/mentee/:MenteeId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Pair where MenteeId=?', [menteeId])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, menteeId)
-      .query('select * from [Pair] where MenteeId=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -796,52 +612,27 @@ app.post('/create-pair', async function(req, res) {
   var mentorPrivacyAccepted = 0;
   var menteePrivacyAccepted = 0;
 
-  var check = await authorizeAdminWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var mentorPrivacy = await execute_async('select PrivacyAccepted from User where Id=?', [mentorId])
+    var mentorPrivacyAccepted = mentorPrivacy[0].PrivacyAccepted
 
-      var mentorPrivRequest = new sql.Request();
+    var menteePrivacy = await execute_async('select PrivacyAccepted from User where Id=?', [menteeId])
+    var menteePrivacyAccepted = menteePrivacy[0].PrivacyAccepted
 
-      mentorPrivRequest.input('MentorId', sql.Int, mentorId)
-      .query('select PrivacyAccepted as priv from [User] where Id=@MentorId', function(err, set) {
+    if (menteePrivacyAccepted == 1 && mentorPrivacyAccepted == 1) {
+      privacyAccepted = 1;
+    }
 
-        if (err) console.log(err);
-        mentorPrivacyAccepted = set.recordset[0].priv;
+    var insert = await execute_async('insert into Pair set ?', {MentorId:mentorId, MenteeId:menteeId, Created:date, LastUpdate:date, PrivacyAccepted:privacyAccepted})
+    res.send(insert)
 
-        var menteePrivRequest = new sql.Request();
-
-        menteePrivRequest.input('MenteeId', sql.Int, menteeId)
-        .query('select PrivacyAccepted as priv from [User] where Id=@MenteeId', function(err, set) {
-
-          if (err) console.log(err);
-          menteePrivacyAccepted = set.recordset[0].priv;
-
-          if (menteePrivacyAccepted == 1 && mentorPrivacyAccepted == 1) {
-            privacyAccepted = 1;
-          }
-
-          var request = new sql.Request();
-
-          request
-          .input('MentorId', sql.Int, mentorId)
-          .input('MenteeId', sql.Int, menteeId)
-          .input('Date', sql.SmallDateTime, date)
-          .input('PrivacyAccepted', sql.Int, privacyAccepted)
-          .query('insert into [Pair] (MentorId, MenteeId, Created, LastUpdate, PrivacyAccepted) values (@MentorId, @MenteeId, @Date, @Date, @PrivacyAccepted)', function(err, set) {
-
-            if (err) console.log(err);
-            res.send(set);
-
-          });
-
-        });
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -851,25 +642,17 @@ app.post('/delete-pair', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  var check = await authorizeAdminWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var deleted = await execute_async('delete from Pair where Id=?', [id])
+    res.send(deleted)
 
-      var request = new sql.Request();
-
-      request
-      .input('Id', sql.Int, id)
-      .query('delete from [Pair] where Id=@Id', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -883,22 +666,13 @@ app.get('/current-topic/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Topic where ActiveTopic=1', [])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request
-      .query('select * from [Topic] where ActiveTopic=1', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
     res.send({success:false});
   }
@@ -913,23 +687,14 @@ app.get('/all-topics/:UserId/:Token', async function(req, res) {
   var check = await authorizeMatchWrapper(userId, token); 
   
   if (check) {
-    sql.connect(config, function (err) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from Topic where ActiveTopic=0 order by Created DESC', [])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request
-      .query('select * from [Topic] where ActiveTopic=0 order by Created DESC', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -940,24 +705,17 @@ app.get('/topic/:Id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
+    
+    var data = await execute_async('select * from Topic where Id=?', [topicId])
+    res.send(data)
 
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request.input("Id", sql.Int, topicId)
-      .query('select * from [Topic] where Id=@Id', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -971,47 +729,29 @@ app.post('/create-topic', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
+  // NEEDS ARCHIVED!
+
   var check = await authorizeAdminWrapper(token);
   if (check) {
-    sql.connect(config, function (err) {
-      if (err) console.log(err);
 
-      var request = new sql.Request();
+    // Craete topic.
+    var insert = await execute_async('insert into Topic set ?', {PostedBy:postedBy, DueDate:dueDate, Title:title, Description:description, Created:date, LastUpdate:date})
 
-      request
-      .query('select ExpoPushToken from [User] where Type=0', function(err, set) {
-        if (err) console.log(err);
-        var pushTokens = []
-        for (var i=0; i<set.recordset.length; i++) {
-          pushTokens.push(set.recordset[i].ExpoPushToken)
-        }
+    // Notify users.
+    var userTokens = await execute_async('select ExpoPushToken from User where Type=0', [])
+    var pushTokens = []
+    for (var i=0; i<userTokens.length; i++) {
+      pushTokens.push(userTokens[i].ExpoPushToken)
+    }
 
-        sendMessagesNotification(pushTokens, 'New Topic', 'CS/M has posted a new topic!', true, {Screen:'TopicsScreen'})
+    sendMessagesNotification(pushTokens, 'New Topic', 'CS/M has posted a new topic!', true, {Screen:'TopicsScreen'})
 
-        sql.connect(config, function (err) {
+    res.send(insert)
 
-          if (err) console.log(err);
-
-          var request = new sql.Request();
-
-          request
-          .input('PostedBy', sql.Int, postedBy)
-          .input('DueDate', sql.SmallDateTime, dueDate)
-          .input('Title', sql.VarChar, title)
-          .input('Description', sql.VarChar, description)
-          .input('Date', sql.SmallDateTime, date)
-          .query('insert into [Topic] (PostedBy, DueDate, Title, Description, Created, LastUpdate) values (@PostedBy, @DueDate, @Title, @Description, @Date, @Date)', function(err, set) {
-
-            if (err) console.log(err);
-            res.send(set);
-
-          });
-
-        });
-      })
-    })
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -1024,34 +764,21 @@ app.post('/update-topic', async function(req, res) {
   var title = req.body.Title;
   var description = req.body.Description;
   var activeTopic = req.body.ActiveTopic;
+  var archived = req.body.Archived;
   var token = req.body.Token;
   var date = new Date();
 
-  var check = await authorizeAdminWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var update = await execute_async('update Topic set PostedBy=?, DueDate=?, Title=?, Description=?, LastUpdate=?, ActiveTopic=?, Archived=? where Id=?', [postedBy, dueDate, title, description, date, activeTopic, archived])
+    res.send(update)
 
-      var request = new sql.Request();
-
-      request
-      .input('Id', sql.Int, id)
-      .input('PostedBy', sql.Int, postedBy)
-      .input('DueDate', sql.SmallDateTime, dueDate)
-      .input('Title', sql.VarChar, title)
-      .input('Description', sql.VarChar, description)
-      .input('Date', sql.SmallDateTime, date)
-      .input('ActiveTopic', sql.Int, activeTopic)
-      .query('update [Topic] set PostedBy=@PostedBy, DueDate=@DueDate, Title=@Title, Description=@Description, LastUpdate=@Date, ActiveTopic=@ActiveTopic where Id=@Id', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -1061,25 +788,17 @@ app.post('/delete-topic', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  var check = await authorizeAdminWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var deleted = await execute_async('delete from Topi where Id=?', [id])
+    res.send(deleted)
 
-      var request = new sql.Request();
-
-      request
-      .input('Id', sql.Int, id)
-      .query('delete from [Topic] where Id=@Id', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -1111,7 +830,9 @@ app.get('/all-users/:Token', async function (req, res) {
 
     });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -1302,7 +1023,9 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
 
     });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -1342,7 +1065,9 @@ app.post('/create-user', async function(req, res) {
 
     });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -1404,7 +1129,9 @@ app.post('/update-expo-push-token', async function(req, res) {
 
     });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -1434,7 +1161,9 @@ app.post('/update-approved', async function(req, res) {
 
     });
   } else {
-   res.send({success:false});
+
+    res.send({success:false});
+
   }
 
 });
@@ -1462,139 +1191,9 @@ app.post('/delete-user', async function(req, res) {
 
     });
   } else {
-   res.send({success:false});
-  }
 
-});
+    res.send({success:false});
 
-// ------------------------------------- //
-//           UserContact Table           //
-// ------------------------------------- //
-
-
-app.get('/contact/:UserId/:Token', async function(req, res) {
-
-  var id = req.params.UserId;
-  var token = req.params.Token;
-
-  var check = await authorizeExistsWrapper(token); if (check) {
-    sql.connect(config, function (err) {
-
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request.input("Id", sql.Int, id)
-      .query('select * from [UserContact] where UserId=@Id', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
-  } else {
-   res.send({success:false});
-  }
-
-});
-
-app.post('/create-contact', async function(req, res) {
-
-  var userId = req.body.UserId;
-  var token = req.body.Token;
-  var contactValue = req.body.ContactValue;
-  var contactType = req.body.ContactType;
-  var date = new Date();
-
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
-
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request
-      .input('UserId', sql.Int, userId)
-      .input('ContactValue', sql.VarChar, contactValue)
-      .input('ContactType', sql.VarChar, contactType)
-      .input('Date', sql.SmallDateTime, date)
-      .query('insert into [UserContact] (UserId, ContactValue, ContactType, Created, LastUpdate) values (@UserId, @ContactValue, @ContactType, @Date, @Date)', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
-  } else {
-   res.send({success:false});
-  }
-
-
-});
-
-app.post('/update-contact', async function(req, res) {
-
-  var id = req.body.Id;
-  var userId = req.body.UserId;
-  var token = req.body.Token;
-  var contactValue = req.body.ContactValue;
-  var contactType = req.body.ContactType;
-  var date = new Date();
-
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
-
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request
-      .input('Id', sql.Int, id)
-      .input('UserId', sql.Int, userId)
-      .input('ContactValue', sql.VarChar, contactValue)
-      .input('ContactType', sql.VarChar, contactType)
-      .input('Date', sql.SmallDateTime, date)
-      .query('update [UserContact] set ContactValue=@ContactValue, ContactType=@ContactType where Id=@Id and UserId=@UserId', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
-  } else {
-   res.send({success:false});
-  }
-
-});
-
-app.post('/delete-contact', async function(req, res) {
-
-  var id = req.body.Id;
-  var userId = req.body.UserId;
-  var token = req.body.Token;
-
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
-
-      if (err) console.log(err);
-
-      var request = new sql.Request();
-
-      request
-      .input('Id', sql.Int, id)
-      .query('delete from [UserContact] where Id=@Id', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
-  } else {
-   res.send({success:false});
   }
 
 });
