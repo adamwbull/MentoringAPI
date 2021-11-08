@@ -434,7 +434,7 @@ app.get('/summary/user/:UserId/:Token', async function(req, res) {
 
   var check = await authorizeMatchWrapper(userId, token); 
   
-  f (check) {
+  if (check) {
 
     var data = await execute_async('select * from AppointmentSummary where UserId=?', [userId])
     res.send(data)
