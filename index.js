@@ -24,7 +24,7 @@ var router = express.Router();
 app.use('/api', router);
 
 // SQL configuration.
-var config = require('./config.js');
+import config from './config.js'
 
 var pool = sql.createPool(config.databaseOptions);
 
