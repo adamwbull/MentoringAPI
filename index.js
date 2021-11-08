@@ -959,7 +959,7 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
   
   if (check) {
 
-    var data = await execute_async('select Id from User where Email=?', [email])])])])
+    var data = await execute_async('select Id from User where Email=?', [email])
     res.send(data)
 
   } else {
