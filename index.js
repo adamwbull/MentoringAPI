@@ -815,20 +815,13 @@ app.post('/delete-topic', async function(req, res) {
 app.get('/all-users/:Token', async function (req, res) {
 
   var token = req.params.Token;
-  var check = await authorizeAdminWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from User', [])
+    res.send(data)
 
-      var request = new sql.Request();
-      request.query('select * from [User]', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
 
     res.send({success:false});
@@ -843,24 +836,17 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select * from User where Id=?', [userId])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.Int, userId)
-      .query('select * from [User] where Id=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-    res.send({success:false});
+
+    res.send({success:false})
+
   }
 
 });
@@ -868,57 +854,35 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 // Checks if a user token exists, and if it doesn't, sets a new user token.
 async function ensureUserTokenExists(email, tokenComponent) {
   let hasToken = await userTokenExistsWrapper(email);
-  console.log("HasToken: ", hasToken);
+  console.log("HasToken: ", hasToken)
   if (!hasToken) {
-    hasToken = await setNewUserTokenWrapper(email, tokenComponent);
+    hasToken = await setNewUserTokenWrapper(email, tokenComponent)
   }
-  console.log("HasToken: ", hasToken);
-  return hasToken;
+  console.log("HasToken: ", hasToken)
+  return hasToken
 }
 
 // Set a new user token.
 async function setNewUserToken(email, tokenComponent, callback) {
   var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
-  console.log("New Token: ", newToken);
-  await sql.connect(config, (err) => {
-    if (err) console.log(err);
-    var request = new sql.Request();
-    request
-    .input('AccessToken', sql.VarChar, newToken)
-    .input('Email', sql.VarChar, email)
-    .query('update [User] set Token=@AccessToken where Email=@Email', (err, set) => {
-      if (err) console.log(err);
-      console.log("New Set: ", set);
-      callback(set.rowsAffected > 0);
-    });
-  }); 
+  console.log("New Token: ", newToken)
+  var updated = await execute_async('update User set Token=? where Email=?', [newToken, email])
+  callback(updated)
 }
 
 // Wrapper for setting a new user token.
 async function setNewUserTokenWrapper(email, tokenComponent) {
   return new Promise((resolve) => {
       setNewUserToken(email,tokenComponent,(callback) => {
-          resolve(callback);
+          resolve(callback)
       });
   });
 }
 
 // Check if a user token exists.
 async function userTokenExists(email, callback) {
-  sql.connect(config, function (err) {
-    if (err) console.log(err);
-    var request = new sql.Request();
-    request
-    .input('Email', sql.VarChar, email)
-    .query('select Token from [User] where Email=@Email', function (err, set) {
-      if (err) console.log(err);
-      if (set.recordset.length > 0) {
-        callback(true);
-      } else {
-        callback(false);
-      }
-    });
-  });
+  var data = await execute_async('select Token from User where Email=?', [email])
+  res.send(data.length > 0)
 }
 
 // Wrapper for checking if a user token exists.
@@ -926,8 +890,8 @@ async function userTokenExistsWrapper(email) {
     return new Promise((resolve) => {
         userTokenExists(email,(callback) => {
             resolve(callback);
-        });
-    });
+        })
+    })
 }
 
 // GET User Id & Token Using LinkedInToken
@@ -950,18 +914,9 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
   var email = emailPayload.elements[0]["handle~"].emailAddress;
   if (email) {
-    if (await ensureUserTokenExists(email, linkedInToken))
-    {
-      sql.connect(config, function (err) {
-        if (err) console.log(err);
-        var request = new sql.Request();
-        request.input('input', sql.VarChar, email)
-        .query('select Id, Token from [User] where Email=@input', function (err, set) {
-          if (err) console.log(err);
-          console.log("Sending Set: ", set);
-          res.send(set);
-        });
-      });
+    if (await ensureUserTokenExists(email, linkedInToken)) {
+      var data = await execute_async('select Id, Token from User where Email=?', [email])
+      res.send(data)
     } else {
       console.log("Token does not exist...");
       res.send({success:false});
@@ -979,25 +934,19 @@ app.get('/user/other/:TargetId/:UserId/:Token', async function (req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizePairWrapper(targetId, userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizePairWrapper(targetId, userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select FirstName,LastName,Email,Avatar,Id from User where Id=?', [targetId])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('targetId', sql.Int, targetId)
-      .query('select FirstName,LastName,Email,Avatar,Id from [User] where Id=@targetId', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
-    res.send({success:false});
+
+    res.send({success:false})
+
   }
+
 });
 
 // GET User by Email
@@ -1006,22 +955,13 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
   var email = req.params.Email;
   var token = req.params.Token;
 
-  var check = await authorizeExistsWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeExistsWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var data = await execute_async('select Id from User where Email=?', [email])])])])
+    res.send(data)
 
-      var request = new sql.Request();
-
-      request.input('input', sql.VarChar, email)
-      .query('select Id from [User] where Email=@input', function (err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
 
     res.send({success:false});
@@ -1041,29 +981,13 @@ app.post('/create-user', async function(req, res) {
   var date = new Date();
   var privacyAccepted = req.body.PrivacyAccepted;
 
-  var check = await authorizeExistsWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeExistsWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var create = await execute_async('insert into User set ?', {Email:email, FirstName:firstName, LastName:lastName, Avatar:avatar, ExpoPushToken:expoPushToken, Created:date, LastUpdate:date, PrivacyAccepted:privacyAccepted})
+    res.send(create)
 
-      var request = new sql.Request();
-
-      request
-      .input('Email', sql.VarChar, email)
-      .input('FirstName', sql.VarChar, firstName)
-      .input('LastName', sql.VarChar, lastName)
-      .input('Avatar', sql.VarChar, avatar)
-      .input('ExpoPushToken', sql.VarChar, expoPushToken)
-      .input('Date', sql.SmallDateTime, date)
-      .input('PrivacyAccepted', sql.Int, privacyAccepted)
-      .query('insert into [User] (Email, FirstName, LastName, Avatar, ExpoPushToken, Created, LastUpdate, PrivacyAccepted) values (@Email, @FirstName, @LastName, @Avatar, @ExpoPushToken, @Date, @Date, @PrivacyAccepted)', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
 
     res.send({success:false});
@@ -1079,26 +1003,17 @@ app.post('/update-privacy', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var update = await execute_async('update User set PrivacyAccepted=? where Email=?', [privacyAccepted, email])
+    res.send(update)
 
-      var request = new sql.Request();
-
-      request
-      .input('PrivacyAccepted', sql.Int, privacyAccepted)
-      .input('Email', sql.VarChar, email)
-      .query('update [User] set PrivacyAccepted=@PrivacyAccepted where Email=@Email', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
+
     res.send({success:false});
+
   }
 
 });
@@ -1110,24 +1025,13 @@ app.post('/update-expo-push-token', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var update = await execute_async('update User set ExpoPushToken=? where Email=?', [expoPushToken, email])
+    res.send(update)
 
-      var request = new sql.Request();
-
-      request
-      .input('ExpoPushToken', sql.VarChar, expoPushToken)
-      .input('Email', sql.VarChar, email)
-      .query('update [User] set ExpoPushToken=@ExpoPushToken where Email=@Email', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
 
     res.send({success:false});
@@ -1142,24 +1046,13 @@ app.post('/update-approved', async function(req, res) {
   var approved = req.body.Approved;
   var token = req.body.Token;
   var userId = req.body.UserId;
-  var check = await authorizeMatchWrapper(userId, token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeMatchWrapper(userId, token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var update = await execute_async('update User set Approved=? where Email=?', [approved, email])
+    res.send(update)
 
-      var request = new sql.Request();
-
-      request
-      .input('Approved', sql.Int, approved)
-      .input('Email', sql.VarChar, email)
-      .query('update [User] set Approved=@Approved where Email=@Email', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
 
     res.send({success:false});
@@ -1173,23 +1066,12 @@ app.post('/delete-user', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  var check = await authorizeAdminWrapper(token); if (check) {
-    sql.connect(config, function (err) {
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
 
-      if (err) console.log(err);
+    var deleted = await execute_async('delete from User where Id=?', [id])
 
-      var request = new sql.Request();
-
-      request
-      .input('Id', sql.Int, id)
-      .query('delete from [User] where Id=@Id', function(err, set) {
-
-        if (err) console.log(err);
-        res.send(set);
-
-      });
-
-    });
   } else {
 
     res.send({success:false});
