@@ -1080,6 +1080,7 @@ app.post('/delete-user', async function(req, res) {
 
 });
 
+// Server exposed on port 80.
 var server = app.listen(process.env.PORT || 80, function () {
   var port = server.address().port;
   console.log("App live on port", port);
