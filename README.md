@@ -145,6 +145,7 @@ A table containing user profile information.
 * LastUpdate (smalldatetime)
 * PrivacyAccepted (int, 0/1)
 * Approved (int, 0/1)
+* Type (int, 0=normal user/1=api account)
 
 ### User GET
 */all-users/:Token* - Provide admin Token.

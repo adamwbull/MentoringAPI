@@ -819,7 +819,7 @@ app.get('/all-users/:Token', async function (req, res) {
   
   if (check) {
 
-    var data = await execute_async('select * from User', [])
+    var data = await execute_async('select * from User where Type=0', [])
     res.send(data)
 
   } else {
