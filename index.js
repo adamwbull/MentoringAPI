@@ -819,7 +819,16 @@ app.get('/all-users/:Token', async function (req, res) {
   
   if (check) {
 
-    var data = await execute_async('select * from User where Type=0', [])
+    var d = await execute_async('select * from User where Type=0', [])
+    var data = []
+
+    d.forEach((item) => {
+      item.Summaries = await execute_async('select * from AppointmentSummary where UserId=?', [item.Id])
+      item.MentorPairs = await execute_async('select * from Pair where MentorId=?', [item.Id])
+      item.MenteePairs = await execute_async('select * from Pair where MenteeId=?', [item.Id])
+      data.add(item)
+    })
+
     res.send(data)
 
   } else {
