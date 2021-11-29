@@ -220,7 +220,7 @@ app.post('/admin/verify-login', async function(req, res) {
   
   if (check) {
 
-    var data = await execute_async('select * from Admin where Email=? and Password=?', [email, password])
+    var data = await execute_async('select Id, Email, FirstName, LastName, Token from Admin where Email=? and Password=?', [email, password])
 
     if (data.length > 0) {
       res.send({success:true,Admin:data[0]})
