@@ -826,7 +826,7 @@ app.get('/all-users/:Token', async function (req, res) {
       item.Summaries = await execute_async('select * from AppointmentSummary where UserId=?', [item.Id])
       item.MentorPairs = await execute_async('select * from Pair where MentorId=?', [item.Id])
       item.MenteePairs = await execute_async('select * from Pair where MenteeId=?', [item.Id])
-      data.add(item)
+      data.push(item)
     }
 
     res.send(data)
