@@ -236,6 +236,31 @@ app.post('/admin/verify-login', async function(req, res) {
 
 });
 
+app.post('/admin/mark-users-for-deletion', async function(req, res) {
+
+  var password = req.body.Password
+  var token = req.body.Token
+  var ids = req.body.Ids
+  var check = await execute_async('select Id from Admin where Password=? and Token=?', [password, token])
+  
+  if (check.length > 0) {
+
+    var arr = []
+    for (var i = 0; i < ids.length; i++) {
+      var delete = await execute_async('update User set Type=2 where Id=?', [ids[i]])
+      arr.push(delete)
+    }
+
+    res.send({success:true,result:arr})
+    
+  } else {
+
+   res.send({success:false,errorCode:1})
+
+  }
+
+});
+
 // ------------------------------------- //
 //          Appointment Table            //
 // ------------------------------------- //

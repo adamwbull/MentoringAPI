@@ -21,6 +21,8 @@ A table containing admin users that can access the dashboard.
 ### Admin POST
 */admin/verify-login* - Provide Email, Password, Token.
 
+*/admin/mark-users-for-deletion* - Provide Ids Array (For Users), Token, Password (for Admin).
+
 ## Appointment Table
 A table containing appointments scheduled between a mentor/mentee pair.
 
@@ -145,7 +147,7 @@ A table containing user profile information.
 * LastUpdate (smalldatetime)
 * PrivacyAccepted (int, 0/1)
 * Approved (int, 0/1)
-* Type (int, 0=normal user/1=api account)
+* Type (int, 0=normal user/1=api account/2=primed for deletion)
 
 ### User GET
 */all-users/:Token* - Provide admin Token.
@@ -167,4 +169,4 @@ A table containing user profile information.
 
 */update-approved* - Provide Email, Approved, UserId, Token.
 
-*/delete-user* - Provide Id, Token.
+*/mark-user-for-deletion* - Provide Id, Token.
