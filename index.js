@@ -247,7 +247,32 @@ app.post('/admin/mark-users-for-deletion', async function(req, res) {
 
     var arr = []
     for (var i = 0; i < ids.length; i++) {
-      var del = await execute_async('update User set Type=2 where Id=?', [ids[i]])
+      var del = await execute_async('update User set Type=2, LastUpdate=current_timestamp where Id=?', [ids[i]])
+      arr.push(del)
+    }
+
+    res.send({success:true,result:arr})
+    
+  } else {
+
+   res.send({success:false,errorCode:1})
+
+  }
+
+});
+
+app.post('/admin/unmark-users-for-deletion', async function(req, res) {
+
+  var password = req.body.Password
+  var token = req.body.Token
+  var ids = req.body.Ids
+  var check = await execute_async('select Id from Admin where Password=? and Token=?', [password, token])
+  
+  if (check.length > 0) {
+
+    var arr = []
+    for (var i = 0; i < ids.length; i++) {
+      var del = await execute_async('update User set Type=0, LastUpdate=current_timestamp  where Id=?', [ids[i]])
       arr.push(del)
     }
 
@@ -844,7 +869,7 @@ app.get('/all-users/:Token', async function (req, res) {
   
   if (check) {
 
-    var d = await execute_async('select * from User where Type=0', [])
+    var d = await execute_async('select * from User where Type=0 or Type=2', [])
     var data = []
 
     for (var item of d) {
