@@ -247,8 +247,8 @@ app.post('/admin/mark-users-for-deletion', async function(req, res) {
 
     var arr = []
     for (var i = 0; i < ids.length; i++) {
-      var delete = await execute_async('update User set Type=2 where Id=?', [ids[i]])
-      arr.push(delete)
+      var del = await execute_async('update User set Type=2 where Id=?', [ids[i]])
+      arr.push(del)
     }
 
     res.send({success:true,result:arr})
