@@ -444,7 +444,7 @@ app.get('/all-summaries/:Token', async function(req, res) {
   
   if (check) {
 
-    var data = await execute_async('select * from AppointmentSummary where PairId in (select Id from Pair where PrivacyAccepted=1)')
+    var data = await execute_async('select * from AppointmentSummary where PairId in (select Id from Pair where PrivacyAccepted=1) order by Created desc')
     res.send(data)
 
   } else {
@@ -862,7 +862,7 @@ app.post('/delete-topic', async function(req, res) {
   
   if (check) {
 
-    var deleted = await execute_async('delete from Topi where Id=?', [id])
+    var deleted = await execute_async('delete from Topic where Id=?', [id])
     res.send(deleted)
 
   } else {
