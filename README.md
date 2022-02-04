@@ -62,7 +62,7 @@ A table containing summaries written for a particular appointment by a certain u
 * LastUpdate (smalldatetime)
 
 ### AppointmentSummary GET
-*/all-summaries/:Token* - Returns all submitted summaries that are PrivacyAccepted.
+*/all-summaries/:Token* - Returns all submitted summaries that are PrivacyAccepted. Proide admin token.
 
 */summary/pair/:PairId/:UserId/:Token* - Returns all summaries written by members of a certain pair.
 
