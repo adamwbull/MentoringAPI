@@ -568,6 +568,26 @@ app.post('/update-summary', async function(req, res) {
 //              Pair Table               //
 // ------------------------------------- //
 
+app.get('/admin/all-pairs/:Token', async function(req, res) {
+
+  var id = req.params.UserId;
+  var token = req.params.Token;
+
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
+
+    var data = await execute_async('select * from Pair', [])
+    res.send(data)
+
+  } else {
+
+    res.send({success:false});
+
+  }
+
+});
+
 app.get('/pair/:UserId/:Token', async function(req, res) {
 
   var id = req.params.UserId;

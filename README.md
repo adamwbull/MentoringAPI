@@ -89,6 +89,8 @@ A table containing mentor/mentee pairs.
 * PrivacyAccepted (int, 0/1)
 
 ### Pair GET
+*/admin/all-pairs/:Token* - Returns all pairs. Provide admin token. 
+
 */pair/mentor/:MentorId/:UserId/:Token* - Returns Pair by MentorId.
 
 */pair/mentee/:MenteeId/:UserId/:Token* - Returns Pair by MenteeId.
