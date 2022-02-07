@@ -817,25 +817,28 @@ app.post('/create-topic', async function(req, res) {
   var description = req.body.Description;
   var token = req.body.Token;
   var date = new Date();
-
-  // NEEDS ARCHIVED!
+  var archived = req.body.Archived;
+  var activeTopic = req.body.ActiveTopic;
+  var notifyUsers = req.body.NotifyUsers;
 
   var check = await authorizeAdminWrapper(token);
   if (check) {
 
     // Craete topic.
-    var insert = await execute_async('insert into Topic set ?', {PostedBy:postedBy, DueDate:dueDate, Title:title, Description:description, Created:date, LastUpdate:date})
+    var insert = await execute_async('insert into Topic set ?', {Archived:archived, ActiveTopic:activeTopic, PostedBy:postedBy, DueDate:dueDate, Title:title, Description:description, Created:date, LastUpdate:date})
 
-    // Notify users.
-    var userTokens = await execute_async('select ExpoPushToken from User where Type=0', [])
-    var pushTokens = []
-    for (var i=0; i<userTokens.length; i++) {
-      pushTokens.push(userTokens[i].ExpoPushToken)
+    if (notifyUsers) {
+      // Notify users.
+      var userTokens = await execute_async('select ExpoPushToken from User where Type=0', [])
+      var pushTokens = []
+      for (var i=0; i<userTokens.length; i++) {
+        pushTokens.push(userTokens[i].ExpoPushToken)
+      }
+
+      sendMessagesNotification(pushTokens, 'New Topic', 'CS/M has posted a topic!', true, {Screen:'TopicsScreen'})
     }
 
-    sendMessagesNotification(pushTokens, 'New Topic', 'CS/M has posted a new topic!', true, {Screen:'TopicsScreen'})
-
-    res.send(insert)
+    res.send({success:true})
 
   } else {
 
@@ -855,6 +858,7 @@ app.post('/update-topic', async function(req, res) {
   var activeTopic = req.body.ActiveTopic;
   var archived = req.body.Archived;
   var token = req.body.Token;
+  var notifyUsers = req.body.NotifyUsers;
   var date = new Date();
 
   var check = await authorizeAdminWrapper(token); 
@@ -862,6 +866,18 @@ app.post('/update-topic', async function(req, res) {
   if (check) {
 
     var update = await execute_async('update Topic set PostedBy=?, DueDate=?, Title=?, Description=?, LastUpdate=?, ActiveTopic=?, Archived=? where Id=?', [postedBy, dueDate, title, description, date, activeTopic, archived, id])
+
+    if (notifyUsers) {
+      // Notify users.
+      var userTokens = await execute_async('select ExpoPushToken from User where Type=0', [])
+      var pushTokens = []
+      for (var i=0; i<userTokens.length; i++) {
+        pushTokens.push(userTokens[i].ExpoPushToken)
+      }
+
+      sendMessagesNotification(pushTokens, 'New Topic', 'CS/M has posted a topic!', true, {Screen:'TopicsScreen'})
+    }
+
     res.send(update)
 
   } else {
