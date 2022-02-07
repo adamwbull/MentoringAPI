@@ -5,6 +5,8 @@ If a route is bolded in the sections below, it has been implemented. Italics are
 
 *PLEASE NOTE*: Database stores times in UTC.
 
+*PLEASE NOTE*: Endpoints with "admin" in the URL or description will require a token or token/id pair from the Admin table.
+
 ## Admin Table
 A table containing admin users that can access the dashboard.
 
@@ -123,7 +125,7 @@ A table containing topics for meeting discussions.
 
 */all-topics/:UserId/:Token* - Returns all topics from newest to oldest, except where ActiveTopic=1.
 
-*/all-topics-admin/:UserId/:Token* - Returns all topics from newest to oldest.
+*/admin/all-topics/:Token* - Returns all topics from newest to oldest.
 
 */topic/:Id/:UserId/:Token* - Returns topic by Id.
 

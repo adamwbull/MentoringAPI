@@ -769,6 +769,25 @@ app.get('/all-topics/:UserId/:Token', async function(req, res) {
 
 });
 
+app.get('/admin/all-topics/:Token', async function(req, res) {
+
+  var token = req.params.Token;
+
+  var check = await authorizeAdminWrapper(token); 
+  
+  if (check) {
+
+    var data = await execute_async('select * from Topic order by LastUpdate DESC', [])
+    res.send(data)
+
+  } else {
+
+    res.send({success:false});
+
+  }
+
+});
+
 app.get('/topic/:Id/:UserId/:Token', async function(req, res) {
 
   var topicId = req.params.Id;
