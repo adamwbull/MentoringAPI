@@ -824,7 +824,12 @@ app.post('/create-topic', async function(req, res) {
   var check = await authorizeAdminWrapper(token);
   if (check) {
 
-    // Craete topic.
+    // Update other ActiveTopic to set it as disabled if necessary.
+    if (activeTopic == 1) {
+      var upd = await execute_async('update Topic set ActiveTopic=0 where ActiveTopic=1;', [])
+    }
+
+    // create topic.
     var insert = await execute_async('insert into Topic set ?', {Archived:archived, ActiveTopic:activeTopic, PostedBy:postedBy, DueDate:dueDate, Title:title, Description:description, Created:date, LastUpdate:date})
 
     if (notifyUsers) {
@@ -865,6 +870,11 @@ app.post('/update-topic', async function(req, res) {
   
   if (check) {
 
+    // Update other ActiveTopic to set it as disabled if necessary.
+    if (activeTopic == 1) {
+      var upd = await execute_async('update Topic set ActiveTopic=0 where ActiveTopic=1;', [])
+    }
+    
     var update = await execute_async('update Topic set PostedBy=?, DueDate=?, Title=?, Description=?, LastUpdate=?, ActiveTopic=?, Archived=? where Id=?', [postedBy, dueDate, title, description, date, activeTopic, archived, id])
 
     if (notifyUsers) {
