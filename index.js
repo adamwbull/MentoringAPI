@@ -576,9 +576,19 @@ app.get('/admin/all-pairs/:Token', async function(req, res) {
   var check = await authorizeAdminWrapper(token); 
   
   if (check) {
+    //var d = await execute_async('select * from User where Type=0 or Type=2', [])
+    var d = await execute_async('select * from Pair', [])
+    var data = []
 
-    var data = await execute_async('select * from Pair', [])
+    for (var item of d) {
+      item.MentorName = await execute_async('select FirstName, LastName from User where Id=?', [item.MentorId])
+      item.MenteeName = await execute_async('select FirstName, LastName from User where Id=?', [item.MenteeId])
+      data.push(item)
+    }
+
     res.send(data)
+    // var data = await execute_async('select * from Pair', [])
+    // res.send(data)
 
   } else {
 
