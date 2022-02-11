@@ -443,10 +443,13 @@ app.get('/all-summaries/:Token', async function(req, res) {
   console.log('Request for /all-summaries/ received')
 
   var check = await authorizeAdminWrapper(token);
+  console.log('Check value:')
+  console.log(check)
+
 
   if (check) {
 
-    var data = await execute_async('select * from AppointmentSummary where PairId in (select Id from Pair where PrivacyAccepted=1) order by Created desc')
+    var data = await execute_async('select * from AppointmentSummary as S where S.AppointmentId in (select A.Id from Appointment as A where A.PairId in (select Id from Pair as P where P.PrivacyAccepted = 1)) order by S.Created desc;')
     res.send(data)
 
   } else {
