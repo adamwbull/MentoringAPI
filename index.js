@@ -104,7 +104,7 @@ async function authorizeExists(token, callback) {
 
   var check = "select Id from User where Token=?";
   var auth = -1;
-  
+
   pool.query(check, [token], function (error, results, fields) {
       if (error) throw error;
       auth = results.length;
@@ -125,7 +125,7 @@ async function authorizeAdmin(token, callback) {
 
   var check = "select Id from Admin where Token=?";
   var auth = -1;
-  
+
   pool.query(check, [token], function (error, results, fields) {
       if (error) throw error;
       auth = results.length;
@@ -146,7 +146,7 @@ async function authorizePair(targetId, userId, token, callback) {
 
   var check = "select * from Pair where (MentorId=? and MenteeId=?) or (MentorId=? and MenteeId=?)";
   var auth = -1;
-  
+
   pool.query(check, [targetId, userId, targetId, userId], function (error, results, fields) {
       if (error) throw error;
       auth = results.length;
@@ -216,8 +216,8 @@ app.post('/admin/verify-login', async function(req, res) {
   var password = req.body.Password
   var token = req.body.Token
 
-  var check = await authorizeExistsWrapper(token); 
-  
+  var check = await authorizeExistsWrapper(token);
+
   if (check) {
 
     var data = await execute_async('select Id, Email, FirstName, LastName, Token from Admin where Email=? and Password=?', [email, password])
@@ -227,7 +227,7 @@ app.post('/admin/verify-login', async function(req, res) {
     } else {
       res.send({success:false,errorCode:2})
     }
-    
+
   } else {
 
    res.send({success:false,errorCode:1})
@@ -242,7 +242,7 @@ app.post('/admin/mark-users-for-deletion', async function(req, res) {
   var token = req.body.Token
   var ids = req.body.Ids
   var check = await execute_async('select Id from Admin where Password=? and Token=?', [password, token])
-  
+
   if (check.length > 0) {
 
     var arr = []
@@ -252,7 +252,7 @@ app.post('/admin/mark-users-for-deletion', async function(req, res) {
     }
 
     res.send({success:true,result:arr})
-    
+
   } else {
 
    res.send({success:false,errorCode:1})
@@ -267,7 +267,7 @@ app.post('/admin/unmark-users-for-deletion', async function(req, res) {
   var token = req.body.Token
   var ids = req.body.Ids
   var check = await execute_async('select Id from Admin where Password=? and Token=?', [password, token])
-  
+
   if (check.length > 0) {
 
     var arr = []
@@ -277,7 +277,7 @@ app.post('/admin/unmark-users-for-deletion', async function(req, res) {
     }
 
     res.send({success:true,result:arr})
-    
+
   } else {
 
    res.send({success:false,errorCode:1})
@@ -295,8 +295,8 @@ app.get('/all-appointments/:Token', async function (req, res) {
 
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     var data = await execute_async('select * from Appointment', [])
@@ -320,8 +320,8 @@ app.get('/appointment/upcoming/:PairId/:UserId/:Token', async function(req, res)
     res.send({success:false, undefinedValues:true})
   }
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from Appointment where PairId=? and ScheduledAt>=?', [pairId, date])
@@ -344,8 +344,8 @@ app.get('/appointment/past/:PairId/:UserId/:Token', async function(req, res) {
     res.send({success:false, undefinedValues:true})
   }
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from Appointment where PairId=? and ScheduledAt<=?', [pairId, date])
@@ -363,8 +363,8 @@ app.get('/appointment/:Id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from Appointment where Id=?', [id])
@@ -386,8 +386,8 @@ app.post('/create-appointment', async function(req, res) {
   var date = new Date();
   var topicId = req.body.TopicId;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var pairData = await execute_async('select MentorId from Pair where MenteeId=? and Id=?', [userId, pairId])
@@ -417,8 +417,8 @@ app.post('/update-appointment-status', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var update = await execute_async('update Appointment set Status=? where Id=?', [status, id])
@@ -440,8 +440,10 @@ app.get('/all-summaries/:Token', async function(req, res) {
 
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  console.log('Request for /all-summaries/ received')
+
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     var data = await execute_async('select * from AppointmentSummary where PairId in (select Id from Pair where PrivacyAccepted=1) order by Created desc')
@@ -461,8 +463,8 @@ app.get('/summary/pair/:PairId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from AppointmentSummary where PairId=?', pairId)
@@ -482,8 +484,8 @@ app.get('/summary/user/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from AppointmentSummary where UserId=?', [userId])
@@ -503,8 +505,8 @@ app.get('/summary/appointment/:AppointmentId/:UserId/:Token', async function(req
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from AppointmentSummary where AppointmentId=?', [appointmentId])
@@ -526,13 +528,13 @@ app.post('/create-summary', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
-    
+
     var insert = await execute_async('insert into AppointmentSummary set ?', {AppointmentId:appointmentId, SummaryText:summaryText, UserId:userId, Status:'Submitted', Created:date, LastUpdate:date})
     res.send(insert)
- 
+
   } else {
 
     res.send({success:false});
@@ -549,13 +551,13 @@ app.post('/update-summary', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var update = await execute_async('update AppointmentSummary set SummaryText=?, LastUpdate=?, Status=? where AppointmentId=? and UserId=?', [summaryText, date, 'Edited', appointmentId, userId])
     res.send(update)
-  
+
   } else {
 
     res.send({success:false});
@@ -573,8 +575,8 @@ app.get('/admin/all-pairs/:Token', async function(req, res) {
   var id = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
     //var d = await execute_async('select * from User where Type=0 or Type=2', [])
     var d = await execute_async('select * from Pair', [])
@@ -603,8 +605,8 @@ app.get('/pair/:UserId/:Token', async function(req, res) {
   var id = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(id, token); 
-  
+  var check = await authorizeMatchWrapper(id, token);
+
   if (check) {
 
     var data = await execute_async('select * from Pair where MentorId=? or MenteeId=?', [id, id])
@@ -625,8 +627,8 @@ app.get('/pair/both/:MentorId/:MenteeId/:UserId/:Token', async function(req, res
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from Pair where MentorId=? and MenteeId=?', [mentorId, menteeId])
@@ -646,8 +648,8 @@ app.get('/pair/mentor/:MentorId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from Pair where MentorId=?', [mentorId])
@@ -667,8 +669,8 @@ app.get('/pair/mentee/:MenteeId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from Pair where MenteeId=?', [menteeId])
@@ -692,8 +694,8 @@ app.post('/create-pair', async function(req, res) {
   var mentorPrivacyAccepted = 0;
   var menteePrivacyAccepted = 0;
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     var mentorPrivacy = await execute_async('select PrivacyAccepted from User where Id=?', [mentorId])
@@ -722,8 +724,8 @@ app.post('/delete-pair', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     var deleted = await execute_async('delete from Pair where Id=?', [id])
@@ -746,8 +748,8 @@ app.get('/current-topic/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from Topic where ActiveTopic=1', [])
@@ -764,8 +766,8 @@ app.get('/all-topics/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from Topic where ActiveTopic=0 order by Created DESC', [])
@@ -783,8 +785,8 @@ app.get('/admin/all-topics/:Token', async function(req, res) {
 
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     var data = await execute_async('select * from Topic order by LastUpdate DESC', [])
@@ -804,10 +806,10 @@ app.get('/topic/:Id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
-    
+
     var data = await execute_async('select * from Topic where Id=?', [topicId])
     res.send(data)
 
@@ -876,8 +878,8 @@ app.post('/update-topic', async function(req, res) {
   var notifyUsers = req.body.NotifyUsers;
   var date = new Date();
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     // Update other ActiveTopic to set it as disabled if necessary.
@@ -913,8 +915,8 @@ app.post('/delete-topic', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     var deleted = await execute_async('delete from Topic where Id=?', [id])
@@ -940,8 +942,8 @@ app.post('/delete-topic', async function(req, res) {
 app.get('/all-users/:Token', async function (req, res) {
 
   var token = req.params.Token;
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     var d = await execute_async('select * from User where Type=0 or Type=2', [])
@@ -970,8 +972,8 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var data = await execute_async('select * from User where Id=?', [userId])
@@ -1068,8 +1070,8 @@ app.get('/user/other/:TargetId/:UserId/:Token', async function (req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizePairWrapper(targetId, userId, token); 
-  
+  var check = await authorizePairWrapper(targetId, userId, token);
+
   if (check) {
 
     var data = await execute_async('select FirstName,LastName,Email,Avatar,Id from User where Id=?', [targetId])
@@ -1089,8 +1091,8 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
   var email = req.params.Email;
   var token = req.params.Token;
 
-  var check = await authorizeExistsWrapper(token); 
-  
+  var check = await authorizeExistsWrapper(token);
+
   if (check) {
 
     var data = await execute_async('select Id from User where Email=?', [email])
@@ -1115,8 +1117,8 @@ app.post('/create-user', async function(req, res) {
   var date = new Date();
   var privacyAccepted = req.body.PrivacyAccepted;
 
-  var check = await authorizeExistsWrapper(token); 
-  
+  var check = await authorizeExistsWrapper(token);
+
   if (check) {
 
     var create = await execute_async('insert into User set ?', {Email:email, FirstName:firstName, LastName:lastName, Avatar:avatar, ExpoPushToken:expoPushToken, Created:date, LastUpdate:date, PrivacyAccepted:privacyAccepted})
@@ -1137,8 +1139,8 @@ app.post('/update-privacy', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var update = await execute_async('update User set PrivacyAccepted=? where Email=?', [privacyAccepted, email])
@@ -1159,8 +1161,8 @@ app.post('/update-expo-push-token', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var update = await execute_async('update User set ExpoPushToken=? where Email=?', [expoPushToken, email])
@@ -1180,8 +1182,8 @@ app.post('/update-approved', async function(req, res) {
   var approved = req.body.Approved;
   var token = req.body.Token;
   var userId = req.body.UserId;
-  var check = await authorizeMatchWrapper(userId, token); 
-  
+  var check = await authorizeMatchWrapper(userId, token);
+
   if (check) {
 
     var update = await execute_async('update User set Approved=? where Email=?', [approved, email])
@@ -1200,8 +1202,8 @@ app.post('/delete-user', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  var check = await authorizeAdminWrapper(token); 
-  
+  var check = await authorizeAdminWrapper(token);
+
   if (check) {
 
     var deleted = await execute_async('delete from User where Id=?', [id])
