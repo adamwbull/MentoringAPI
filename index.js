@@ -102,7 +102,7 @@ async function authorizeMatchWrapper(token, arr) {
 
 async function authorizeExists(token, callback) {
 
-  var check = "select Id from User where Token=?";
+  var check = "select Id from Verify where Token=?";
   var auth = -1;
   
   pool.query(check, [token], function (error, results, fields) {

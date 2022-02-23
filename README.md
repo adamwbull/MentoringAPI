@@ -7,6 +7,13 @@ If a route is bolded in the sections below, it has been implemented. Italics are
 
 *PLEASE NOTE*: Endpoints with "admin" in the URL or description will require a token or token/id pair from the Admin table.
 
+## Verify Table
+A table containing keys used to make API calls.
+
+### Verify Structure
+* Id (PK, int)
+* Token (nvarchar(MAX))
+
 ## Admin Table
 A table containing admin users that can access the dashboard.
 
