@@ -108,7 +108,16 @@ async function authorizeExists(token, callback) {
   pool.query(check, [token], function (error, results, fields) {
       if (error) throw error;
       auth = results.length;
-      callback(auth);
+      if (auth == 0) {
+        pool.query("select Id from User where Token=?", [token], function (error, results, fields) {
+            if (error) throw error;
+            auth = results.length;
+            callback(auth)
+        })
+      } else {
+        callback(auth)
+      }
+      
   });
 
 }
