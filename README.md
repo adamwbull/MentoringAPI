@@ -30,7 +30,11 @@ A table containing admin users that can access the dashboard.
 ### Admin POST
 */admin/verify-login* - Provide Email, Password, Token.
 
+*/admin/update-password* - Provide OldPassword, Password, Token.
+
 */admin/mark-users-for-deletion* - Provide Ids Array (For Users), Token, Password (for Admin).
+
+*/admin/unmark-users-for-deletion* - Provide Ids Array (For Users), Token, Password (for Admin).
 
 ## Appointment Table
 A table containing appointments scheduled between a mentor/mentee pair.

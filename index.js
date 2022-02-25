@@ -295,6 +295,27 @@ app.post('/admin/unmark-users-for-deletion', async function(req, res) {
 
 });
 
+app.post('/admin/update-password', async function(req, res) {
+
+  var password = req.body.Password
+  var token = req.body.Token
+  var oldPassword = req.body.OldPassword
+  var check = await execute_async('select Id from Admin where Password=? and Token=?', [oldPassword, token])
+
+  if (check.length > 0) {
+
+    var updated = await execute_async('update Admin set Password=? where Id=?', [password, check[0]])
+
+    res.send({success:true,result:updated})
+
+  } else {
+
+   res.send({success:false,errorCode:1})
+
+  }
+
+});
+
 // ------------------------------------- //
 //          Appointment Table            //
 // ------------------------------------- //
