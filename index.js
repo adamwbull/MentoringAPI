@@ -749,23 +749,73 @@ app.post('/create-pair', async function(req, res) {
 
 app.post('/delete-pair', async function(req, res) {
 
-  var id = req.body.Id;
-  var token = req.body.Token;
+  var password = req.body.Password
+  var token = req.body.Token
+  var ids = req.body.Ids
+  var check = await execute_async('select Id from Admin where Password=? and Token=?', [password, token])
 
-  var check = await authorizeAdminWrapper(token);
+  if (check.length > 0) {
 
-  if (check) {
+    var arr = []
+    for (var i = 0; i < ids.length; i++) {
+      var del = await execute_async('update Pair set Type=2, LastUpdate=current_timestamp where Id=?', [ids[i]])
+      arr.push(del)
+    }
 
-    var deleted = await execute_async('delete from Pair where Id=?', [id])
-    res.send(deleted)
+    res.send({success:true,result:arr})
 
   } else {
 
-    res.send({success:false});
+   res.send({success:false,errorCode:1})
 
   }
 
 });
+
+app.post('/undelete-pair', async function(req, res) {
+
+  var password = req.body.Password
+  var token = req.body.Token
+  var ids = req.body.Ids
+  var check = await execute_async('select Id from Admin where Password=? and Token=?', [password, token])
+
+  if (check.length > 0) {
+
+    var arr = []
+    for (var i = 0; i < ids.length; i++) {
+      var del = await execute_async('update Pair set Type=0, LastUpdate=current_timestamp where Id=?', [ids[i]])
+      arr.push(del)
+    }
+
+    res.send({success:true,result:arr})
+
+  } else {
+
+   res.send({success:false,errorCode:1})
+
+  }
+
+});
+
+// app.post('/delete-pair', async function(req, res) {
+
+//   var id = req.body.Id;
+//   var token = req.body.Token;
+
+//   var check = await authorizeAdminWrapper(token);
+
+//   if (check) {
+
+//     var deleted = await execute_async('delete from Pair where Id=?', [id])
+//     res.send(deleted)
+
+//   } else {
+
+//     res.send({success:false});
+
+//   }
+
+// });
 
 // ------------------------------------- //
 //             Topic Table               //
