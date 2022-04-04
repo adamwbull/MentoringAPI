@@ -1080,9 +1080,10 @@ async function ensureUserTokenExists(email, tokenComponent) {
 // Set a new user token.
 async function setNewUserToken(email, tokenComponent, callback) {
   var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
-  console.log("New Token: ", newToken)
-  var updated = await execute_async('update User set Token=? where Email=?', [newToken, email])
-  callback(updated)
+  console.log("New Token: ", newToken);
+  var updated = await execute_async('update User set Token=? where Email=?', [newToken, email]);
+  console.log("Updated MySQL: ", updated);
+  callback(updated);
 }
 
 // Wrapper for setting a new user token.
