@@ -1072,6 +1072,7 @@ async function ensureUserTokenExists(email, tokenComponent) {
   if (!hasToken) {
     hasToken = await setNewUserTokenWrapper(email, tokenComponent);
   }
+  console.log('confirm it worked: ', await userTokenExistsWrapper(email));
   console.log("1 HasToken: ", hasToken);
   return hasToken
 }
