@@ -1066,8 +1066,8 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 });
 
 // Checks if a user token exists, and if it doesn't, sets a new user token.
-async function ensureUserTokenExists(email, tokenComponent, res) {
-  let hasToken = await userTokenExistsWrapper(email, res);
+async function ensureUserTokenExists(email, tokenComponent) {
+  let hasToken = await userTokenExistsWrapper(email);
   console.log("HasToken: ", hasToken)
   if (!hasToken) {
     hasToken = await setNewUserTokenWrapper(email, tokenComponent)
@@ -1094,15 +1094,15 @@ async function setNewUserTokenWrapper(email, tokenComponent) {
 }
 
 // Check if a user token exists.
-async function userTokenExists(email, res, callback) {
+async function userTokenExists(email, callback) {
   var data = await execute_async('select Token from User where Email=?', [email])
-  res.send(data.length > 0)
+  callback(data.length > 0);
 }
 
 // Wrapper for checking if a user token exists.
-async function userTokenExistsWrapper(email, res) {
+async function userTokenExistsWrapper(email) {
     return new Promise((resolve) => {
-        userTokenExists(email, res, (callback) => {
+        userTokenExists(email, (callback) => {
             resolve(callback);
         })
     })
@@ -1128,7 +1128,7 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
   var email = emailPayload.elements[0]["handle~"].emailAddress;
   if (email) {
-    if (await ensureUserTokenExists(email, linkedInToken, res)) {
+    if (await ensureUserTokenExists(email, linkedInToken)) {
       var data = await execute_async('select Id, Token from User where Email=?', [email])
       res.send(data)
     } else {
