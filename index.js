@@ -1065,19 +1065,20 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
 });
 
 async function fetchUsing(url, bearer, ender='') {
+  var resp;
   if (!bearer) {
-    const res = await fetch(url + ender, {
+    resp = await fetch(url + ender, {
       method: 'GET'
     });
   } else {
-    const res = await fetch(url + ender, {
+    resp = await fetch(url + ender, {
       method: 'GET',
       headers: {
         Authorization: 'Bearer ' + bearer,
       }
     });
   }
-  const payload = await res.json();
+  const payload = await resp.json();
   return payload;
 }
 
