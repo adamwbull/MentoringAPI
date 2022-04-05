@@ -200,6 +200,7 @@ async function authorizePairWrapper(targetId, userId, token) {
     });
 }
 
+// q = query, a = query params
 async function execute_async (q, a) {
   return await new Promise(function(resolve,reject){
     pool.query(
@@ -1060,54 +1061,24 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
   } else {
 
     res.send({success:false})
-
   }
-
 });
 
-// Checks if a user token exists, and if it doesn't, sets a new user token.
-async function ensureUserTokenExists(email, tokenComponent) {
-  let hasToken = await userTokenExistsWrapper(email);
-  console.log("0 HasToken: ", hasToken);
-  if (!hasToken) {
-    hasToken = await setNewUserTokenWrapper(email, tokenComponent);
+async function fetchUsing(url, bearer, ender='') {
+  if (!bearer) {
+    const res = await fetch(url + ender, {
+      method: 'GET'
+    });
+  } else {
+    const res = await fetch(url + ender, {
+      method: 'GET',
+      headers: {
+        Authorization: 'Bearer ' + bearer,
+      }
+    });
   }
-  console.log('confirm it worked: ', await userTokenExistsWrapper(email));
-  console.log("1 HasToken: ", hasToken);
-  return hasToken
-}
-
-// Set a new user token.
-async function setNewUserToken(email, tokenComponent, callback) {
-  var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
-  console.log("New Token: ", newToken);
-  var updated = await execute_async('update User set Token=? where Email=?', [newToken, email]);
-  console.log("Updated MySQL: ", updated);
-  callback(updated);
-}
-
-// Wrapper for setting a new user token.
-async function setNewUserTokenWrapper(email, tokenComponent) {
-  return new Promise((resolve) => {
-      setNewUserToken(email,tokenComponent,(callback) => {
-          resolve(callback)
-      });
-  });
-}
-
-// Check if a user token exists.
-async function userTokenExists(email, callback) {
-  var data = await execute_async('select Token from User where Email=?', [email])
-  callback(data.length > 0);
-}
-
-// Wrapper for checking if a user token exists.
-async function userTokenExistsWrapper(email) {
-    return new Promise((resolve) => {
-        userTokenExists(email, (callback) => {
-            resolve(callback);
-        })
-    })
+  const payload = await res.json();
+  return payload;
 }
 
 // GET User Id & Token Using LinkedInToken
@@ -1118,26 +1089,28 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
   console.log(linkedInToken);
 
   // get email address from LinkedIn
-  const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
-    method: 'GET',
-    headers: {
-      Authorization: 'Bearer ' + linkedInToken,
-    }
-  });
-  const emailPayload = await emailres.json();
+  // const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
+  //   method: 'GET',
+  //   headers: {
+  //     Authorization: 'Bearer ' + linkedInToken,
+  //   }
+  // });
+  const emailPayload = fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', linkedInToken);
 
   console.log(emailPayload);
-
   var email = emailPayload.elements[0]["handle~"].emailAddress;
   if (email) {
-    if (await ensureUserTokenExists(email, linkedInToken)) {
-      var data = await execute_async('select Id, Token from User where Email=?', [email])
-      console.log("Token exists, sending... ", data);
-      res.send(data)
-    } else {
-      console.log("Token does not exist...");
-      res.send({success:false});
+    if (await execute_async('select Id from User where Email=?', [email]).length > 0) {
+      console.log("User does not exist");
+      initializeNewUser(email);
     }
+    if (await execute_async('select Token from User where Email=?', [email]) > 0) {
+      var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
+      await execute_async('update User set Token=? where Email=?', [newToken, email]);
+    }
+    console.log("Token should exist...", data);
+    var data = await execute_async('select Id,Token from User where Email=?', [email]);
+    res.send(data);
   } else {
     console.log("No valid email...");
     res.send({success:false});
@@ -1187,28 +1160,43 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
 
 });
 
+async function initializeNewUser(email) {
+  var date = new Date()
+  var filler = "NEW" + date.toString();
+  var components = {
+    Email:        email,
+    FirstName:    filler,
+    LastName:     filler,
+  }
+  await execute_async('insert into User set ?', components);
+}
+
 app.post('/create-user', async function(req, res) {
 
-  var email = req.body.Email;
-  var firstName = req.body.FirstName;
-  var lastName = req.body.LastName;
-  var avatar = req.body.Avatar;
-  var token = req.body.Token;
-  var expoPushToken = req.body.ExpoPushToken;
   var date = new Date();
-  var privacyAccepted = req.body.PrivacyAccepted;
+  var components = {
+    Email:            req.body.Email,
+    FirstName:        req.body.FirstName,
+    LastName:         req.body.LastName,
+    Avatar:           req.body.Avatar,
+    ExpoPushToken:    req.body.ExpoPushToken,
+    Created:          date,
+    LastUpdate:       date,
+    PrivacyAccepted:  req.body.PrivacyAccepted
+  };
+  var token = req.body.Token;
 
   var check = await authorizeExistsWrapper(token);
-
   if (check) {
-
-    var create = await execute_async('insert into User set ?', {Email:email, FirstName:firstName, LastName:lastName, Avatar:avatar, ExpoPushToken:expoPushToken, Created:date, LastUpdate:date, PrivacyAccepted:privacyAccepted})
-    res.send(create)
-
+    if (await execute_async('select Email from User where Email=?', [components.Email]).length > 0) {
+      var update = await execute_async('update User set ? where Email=?', [components, components.Email]);
+      res.send(update);
+    } else {
+      var create = await execute_async('insert into User set ?', components);
+      res.send(create);
+    }
   } else {
-
     res.send({success:false});
-
   }
 
 });
