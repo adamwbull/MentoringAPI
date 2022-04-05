@@ -1089,14 +1089,14 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
   console.log(linkedInToken);
 
   //get email address from LinkedIn
-  const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
-    method: 'GET',
-    headers: {
-      Authorization: 'Bearer ' + linkedInToken,
-    }
-  });
-  const emailPayload = emailres.json();
-  // const emailPayload = fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', linkedInToken);
+  // const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
+  //   method: 'GET',
+  //   headers: {
+  //     Authorization: 'Bearer ' + linkedInToken,
+  //   }
+  // });
+  // const emailPayload = await emailres.json();
+  const emailPayload = await fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', linkedInToken);
 
   console.log(emailPayload);
   var email = emailPayload.elements[0]["handle~"].emailAddress;
