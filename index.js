@@ -1089,14 +1089,6 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
   console.log(linkedInToken);
 
-  //get email address from LinkedIn
-  // const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
-  //   method: 'GET',
-  //   headers: {
-  //     Authorization: 'Bearer ' + linkedInToken,
-  //   }
-  // });
-  // const emailPayload = await emailres.json();
   const emailPayload = await fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', linkedInToken);
 
   console.log(emailPayload);
@@ -1110,8 +1102,8 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
       var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
       await execute_async('update User set Token=? where Email=?', [newToken, email]);
     }
-    console.log("Token should exist...", data);
     var data = await execute_async('select Id,Token from User where Email=?', [email]);
+    console.log("Token should exist...", data);
     res.send(data);
   } else {
     console.log("No valid email...");
