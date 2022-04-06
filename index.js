@@ -1169,11 +1169,13 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
 
 async function initializeNewUser(email, newToken) {
   var date = new Date()
-  var filler = "NEW" + date.toString();
+  var filler = "";
   var components = {
     Email:        email,
     FirstName:    filler,
     LastName:     filler,
+    Avatar:     filler,
+    ExpoPushToken:     filler,
     Token: newToken,
   }
   console.log('insert components:',components)
