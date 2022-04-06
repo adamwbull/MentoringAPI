@@ -1087,27 +1087,37 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 {
   var linkedInToken = req.params.LinkedInToken;
 
-  console.log(linkedInToken);
+  console.log('linkedInToken:',linkedInToken);
 
   const emailPayload = await fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', linkedInToken);
 
-  console.log(emailPayload);
+  console.log('emailPayload:',emailPayload);
   var email = emailPayload.elements[0]["handle~"].emailAddress;
-  if (email) {
-    if (await execute_async('select Id from User where Email=?', [email]).length > 0) {
+  console.log('email:',email)
+
+  // Check to see if LinkedIn returned a valid email.
+  if (email != undefined && email.length > 0) {
+
+    // Check if user exists.
+    var userCheck = await execute_async('select Id from User where Email=?', [email])
+    if (userCheck.length > 0) {
       console.log("User does not exist");
       initializeNewUser(email);
     }
-    if (await execute_async('select Token from User where Email=?', [email]) > 0) {
-      var newToken = crypto.createHash('sha256').update(tokenComponent + new Date().toString()).digest('hex');
-      await execute_async('update User set Token=? where Email=?', [newToken, email]);
-    }
+
+    // Get user with new token, as they should exist now.
+    var newToken = crypto.createHash('sha256').update('iewhu2toiu24g5uyo342br5oi34b' + new Date().toString()).digest('hex');
+    await execute_async('update User set Token=? where Email=?', [newToken, email]);
     var data = await execute_async('select Id,Token from User where Email=?', [email]);
+    
     console.log("Token should exist...", data);
     res.send(data);
+
   } else {
+
     console.log("No valid email...");
     res.send({success:false});
+
   }
 });
 
