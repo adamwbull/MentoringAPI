@@ -1101,7 +1101,7 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
     // Check if user exists.
     var userCheck = await execute_async('select Id from User where Email=?', [email])
     console.log('userCheck:',userCheck)
-    if (userCheck.length > 0) {
+    if (userCheck.length == 0) {
       console.log("User does not exist");
       await initializeNewUser(email);
     }
