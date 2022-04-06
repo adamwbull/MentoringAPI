@@ -1100,16 +1100,17 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
     // Check if user exists.
     var userCheck = await execute_async('select Id from User where Email=?', [email])
+    console.log('userCheck:',userCheck)
     if (userCheck.length > 0) {
       console.log("User does not exist");
-      initializeNewUser(email);
+      await initializeNewUser(email);
     }
 
     // Get user with new token, as they should exist now.
     var newToken = crypto.createHash('sha256').update('iewhu2toiu24g5uyo342br5oi34b' + new Date().toString()).digest('hex');
     await execute_async('update User set Token=? where Email=?', [newToken, email]);
     var data = await execute_async('select Id,Token from User where Email=?', [email]);
-    
+
     console.log("Token should exist...", data);
     res.send(data);
 
@@ -1172,7 +1173,10 @@ async function initializeNewUser(email) {
     FirstName:    filler,
     LastName:     filler,
   }
-  await execute_async('insert into User set ?', components);
+  console.log('insert components:',components)
+  var inserted = await execute_async('insert into User set ?', components);
+  console.log('inserted:',inserted)
+  return
 }
 
 app.post('/create-user', async function(req, res) {
