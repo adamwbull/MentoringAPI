@@ -1100,15 +1100,17 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
     // Check if user exists.
     var userCheck = await execute_async('select Id from User where Email=?', [email])
-    console.log('userCheck:',userCheck)
+    var newToken = crypto.createHash('sha256').update('iewhu2toiu24g5uyo342br5oi34b' + new Date().toString()).digest('hex');
     if (userCheck.length == 0) {
+      // Create new user.
       console.log("User does not exist");
-      await initializeNewUser(email);
+      await initializeNewUser(email, newToken);
+    } else {
+      // Generate a new token for this session.
+      await execute_async('update User set Token=? where Email=?', [newToken, email]);
     }
 
     // Get user with new token, as they should exist now.
-    var newToken = crypto.createHash('sha256').update('iewhu2toiu24g5uyo342br5oi34b' + new Date().toString()).digest('hex');
-    await execute_async('update User set Token=? where Email=?', [newToken, email]);
     var data = await execute_async('select Id,Token from User where Email=?', [email]);
 
     console.log("Token should exist...", data);
@@ -1165,13 +1167,14 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
 
 });
 
-async function initializeNewUser(email) {
+async function initializeNewUser(email, newToken) {
   var date = new Date()
   var filler = "NEW" + date.toString();
   var components = {
     Email:        email,
     FirstName:    filler,
     LastName:     filler,
+    Token: newToken,
   }
   console.log('insert components:',components)
   var inserted = await execute_async('insert into User set ?', components);
