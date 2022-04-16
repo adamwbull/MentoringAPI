@@ -959,14 +959,14 @@ app.get('/all-users/:Token', async function (req, res) {
 app.get('/user/id/:UserId/:Token', async function(req, res) {
   const userId = req.params.UserId;
   const token = req.params.Token;
-  console.log("/user/id/:", userId, "/:", token);
+  console.log("/user/id/:", userId, "/:", token, "\n");
   const check = await authorizeMatch(userId, token);
   if (check) {
-    console.log("/user/id/ authorized");
+    console.log("/user/id/ authorized\n");
     const data = await execute_async('select * from User where Id=?', [userId])
     res.send(data);
   } else {
-    console.log("/user/id/ not authorized");
+    console.log("/user/id/ not authorized\n");
     res.send({success:false});
   }
 });
