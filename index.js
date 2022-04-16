@@ -79,13 +79,13 @@ async function sendMessagesNotification(pushTokens, title, body, sound, data) {
 //            Token Securing             //
 // ------------------------------------- //
 
-async function authorizeMatch(token, arr, callback) {
+async function authorizeMatch(token, arr) {
   var check = "select Id from User where Token=? and Id=?";
   let result = await execute_async(check, [token, arr[0]]);
   return result.length;
 }
 
-async function authorizeExists(token, callback) {
+async function authorizeExists(token) {
   var check = "select Id from Verify where Token=?";
   let result = await execute_async(check, [token]);
   if (result.length <= 0) {
@@ -95,16 +95,15 @@ async function authorizeExists(token, callback) {
   return result.length;
 }
 
-async function authorizeAdmin(token, callback) {
+async function authorizeAdmin(token) {
   var check = "select Id from Admin where Token=?";
   let result = await execute_async(check, [token]);
   return result.length;
 }
 
 // Checks if user has access to information of another user. (are they paired?)
-async function authorizePair(targetId, userId, token, callback) {
+async function authorizePair(targetId, userId, token) {
   var check = "select * from Pair where (MentorId=? and MenteeId=?) or (MentorId=? and MenteeId=?)";
-  var auth = -1;
   var args = [targetId, userId, targetId, userId]
   let result = await execute_async(check, args);
   return result.length;
@@ -990,17 +989,20 @@ async function fetchUsing(url, bearer, ender='') {
 app.get('/user/access/:LinkedInToken', async function (req, res)
 {
   var linkedInToken = req.params.LinkedInToken;
-
   console.log('linkedInToken:',linkedInToken);
-
   const emailPayload = await fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', linkedInToken);
-
   console.log('emailPayload:',emailPayload);
-  var email = emailPayload.elements[0]["handle~"].emailAddress;
+  const email = emailPayload.elements[0]["handle~"].emailAddress;
   console.log('email:',email)
 
   // Check to see if LinkedIn returned a valid email.
   if (email != undefined && email.length > 0) {
+
+    const infoPayload = await fetchUsing('https://api.linkedin.com/v2/me', access_token);
+    const picturePayload = await fetchUsing('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token=', null, access_token);
+    const first = infoPayload.localizedFirstName;
+    const last = infoPayload.localizedLastName;
+    const pic = picturePayload.profilePicture["displayImage~"].elements[2].identifiers[0].identifier;
 
     // Check if user exists.
     var userCheck = await execute_async('select Id from User where Email=?', [email])
@@ -1008,23 +1010,18 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
     if (userCheck.length == 0) {
       // Create new user.
       console.log("User does not exist");
-      await initializeNewUser(email, newToken);
+      await initializeNewUser(email, newToken, first, last, pic);
     } else {
       // Generate a new token for this session.
       await execute_async('update User set Token=? where Email=?', [newToken, email]);
     }
-
     // Get user with new token, as they should exist now.
     var data = await execute_async('select Id,Token from User where Email=?', [email]);
-
     console.log("Token should exist...", data);
     res.send(data);
-
   } else {
-
     console.log("No valid email...");
     res.send({success:false});
-
   }
 });
 
@@ -1071,20 +1068,22 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
 
 });
 
-async function initializeNewUser(email, newToken) {
-  var date = new Date()
+async function initializeNewUser(email, newToken, first="", last="", pic="") {
+  var date = new Date();
   var filler = "";
   var components = {
-    Email:        email,
-    FirstName:    filler,
-    LastName:     filler,
-    Avatar:     filler,
-    ExpoPushToken:     filler,
-    Token: newToken,
-  }
-  console.log('insert components:',components)
+    Email:            email,
+    FirstName:        first,
+    LastName:         last,
+    Avatar:           pic,
+    ExpoPushToken:    filler,
+    Token:            newToken,
+    Created:          date,
+    LastUpdate:       date,
+  };
+  console.log('insert components:', components)
   var inserted = await execute_async('insert into User set ?', components);
-  console.log('inserted:',inserted)
+  console.log('inserted:', inserted)
   return
 }
 
