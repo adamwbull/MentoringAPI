@@ -82,6 +82,7 @@ async function sendMessagesNotification(pushTokens, title, body, sound, data) {
 async function authorizeMatch(token, arr) {
   var check = "select Id from User where Token=? and Id=?";
   let result = await execute_async(check, [token, arr[0]]);
+  console.log("AuthMatch: ", result);
   return result.length;
 }
 
@@ -956,11 +957,11 @@ app.get('/all-users/:Token', async function (req, res) {
 
 // GET User by Id
 app.get('/user/id/:UserId/:Token', async function(req, res) {
-  var userId = req.params.UserId;
-  var token = req.params.Token;
-  var check = await authorizeMatch(userId, token);
+  const userId = req.params.UserId;
+  const token = req.params.Token;
+  const check = await authorizeMatch(userId, token);
   if (check) {
-    var data = await execute_async('select * from User where Id=?', [userId])
+    const data = await execute_async('select * from User where Id=?', [userId])
     res.send(data)
   } else {
     res.send({success:false})
@@ -1013,6 +1014,7 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
       await initializeNewUser(email, newToken, first, last, pic);
     } else {
       // Generate a new token for this session.
+      console.log("User exists");
       await execute_async('update User set Token=? where Email=?', [newToken, email]);
     }
     // Get user with new token, as they should exist now.
