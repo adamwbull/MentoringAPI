@@ -79,9 +79,9 @@ async function sendMessagesNotification(pushTokens, title, body, sound, data) {
 //            Token Securing             //
 // ------------------------------------- //
 
-async function authorizeMatch(token, arr) {
+async function authorizeMatch(userId, token) {
   var check = "select Id from User where Token=? and Id=?";
-  let result = await execute_async(check, [token, arr[0]]);
+  let result = await execute_async(check, [token, userId]);
   console.log("AuthMatch: ", result);
   return result.length;
 }
@@ -962,9 +962,9 @@ app.get('/user/id/:UserId/:Token', async function(req, res) {
   const check = await authorizeMatch(userId, token);
   if (check) {
     const data = await execute_async('select * from User where Id=?', [userId])
-    res.send(data)
+    res.send(data);
   } else {
-    res.send({success:false})
+    res.send({success:false});
   }
 });
 
