@@ -83,19 +83,6 @@ async function authorizeMatch(token, arr, callback) {
   var check = "select Id from User where Token=? and Id=?";
   let result = await execute_async(check, [token, arr[0]]);
   return result.length;
-  // pool.query(check, [token, arr[0]], function (error, results, fields) {
-  //     if (error) throw error;
-  //     auth = results.length;
-  //     callback(auth);
-  // });
-}
-
-async function authorizeMatchWrapper(token, arr) {
-    return new Promise((resolve) => {
-        authorizeMatch(token,arr,(callback) => {
-            resolve(callback);
-        });
-    });
 }
 
 async function authorizeExists(token, callback) {
@@ -106,93 +93,21 @@ async function authorizeExists(token, callback) {
     result = await execute_async(check, [token]);
   }
   return result.length;
-  // pool.query(check, [token], function (error, results, fields) {
-  //     if (error) throw error;
-  //     auth = results.length;
-  //     if (auth == 0) {
-  //       pool.query("select Id from User where Token=?", [token], function (error, results, fields) {
-  //           if (error) throw error;
-  //           auth = results.length;
-  //           callback(auth)
-  //       })
-  //     } else {
-  //       callback(auth)
-  //     }
-      
-  // });
-}
-
-async function authorizeExistsWrapper(token) {
-    return new Promise((resolve) => {
-        authorizeExists(token,(callback) => {
-            resolve(callback);
-        });
-    });
 }
 
 async function authorizeAdmin(token, callback) {
   var check = "select Id from Admin where Token=?";
   let result = await execute_async(check, [token]);
   return result.length;
-  // pool.query(check, [token], function (error, results, fields) {
-  //     if (error) throw error;
-  //     auth = results.length;
-  //     callback(auth);
-  // });
 }
 
-async function authorizeAdminWrapper(token) {
-    return new Promise((resolve) => {
-        authorizeAdmin(token,(callback) => {
-            resolve(callback);
-        });
-    });
-}
-
+// Checks if user has access to information of another user. (are they paired?)
 async function authorizePair(targetId, userId, token, callback) {
-
   var check = "select * from Pair where (MentorId=? and MenteeId=?) or (MentorId=? and MenteeId=?)";
   var auth = -1;
   var args = [targetId, userId, targetId, userId]
   let result = await execute_async(check, args);
   return result.length;
-  // pool.query(check, [targetId, userId, targetId, userId], function (error, results, fields) {
-  //     if (error) throw error;
-  //     auth = results.length;
-  //     callback(auth);
-  // });
-  /*
-  sql.connect(config, function (err) {
-    if (err) console.log(err);
-    var request = new sql.Request();
-    request
-    .input('Token', sql.VarChar, token)
-    .input('TargetId', sql.Int, targetId)
-    .input('UserId', sql.Int, userId)
-    .query('select * from [Pair] as P join [User] as U on P.MentorId=U.Id' +
-                  ' where MentorId=@UserId and MenteeId=@TargetId and Token=@Token' +
-          ' union' +
-          ' select * from [Pair] as P join [User] as U on P.MenteeId=U.Id' +
-                  ' where MenteeId=@UserId and MentorId=@TargetId and Token=@Token', function (err, set) {
-      if (err) console.log(err);
-      console.log("Results: ", set);
-      if (set.recordset.length > 0) {
-        callback(true);
-      } else {
-        callback(false);
-      }
-    });
-  });
-  */
-}
-
-// Checks if user has access to information of another user. (are they paired?)
-async function authorizePairWrapper(targetId, userId, token) {
-    return new Promise((resolve) => {
-        authorizePair(targetId,userId,token,(callback) => {
-            resolve(callback);
-        });
-    });
 }
 
 // q = query, a = query params
