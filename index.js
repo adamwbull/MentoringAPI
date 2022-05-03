@@ -79,125 +79,35 @@ async function sendMessagesNotification(pushTokens, title, body, sound, data) {
 //            Token Securing             //
 // ------------------------------------- //
 
-async function authorizeMatch(token, arr, callback) {
-
+async function authorizeMatch(userId, token) {
   var check = "select Id from User where Token=? and Id=?";
-  var auth = -1;
-
-  pool.query(check, [token, arr[0]], function (error, results, fields) {
-      if (error) throw error;
-      auth = results.length;
-      callback(auth);
-  });
-
+  let result = await execute_async(check, [token, userId]);
+  console.log("AuthMatch: ", result);
+  return result.length;
 }
 
-async function authorizeMatchWrapper(token, arr) {
-    return new Promise((resolve) => {
-        authorizeMatch(token,arr,(callback) => {
-            resolve(callback);
-        });
-    });
-}
-
-async function authorizeExists(token, callback) {
-
+async function authorizeExists(token) {
   var check = "select Id from Verify where Token=?";
-  var auth = -1;
-
-  pool.query(check, [token], function (error, results, fields) {
-      if (error) throw error;
-      auth = results.length;
-      if (auth == 0) {
-        pool.query("select Id from User where Token=?", [token], function (error, results, fields) {
-            if (error) throw error;
-            auth = results.length;
-            callback(auth)
-        })
-      } else {
-        callback(auth)
-      }
-      
-  });
-
+  let result = await execute_async(check, [token]);
+  if (result.length <= 0) {
+    check = "select Id from User where Token=?";
+    result = await execute_async(check, [token]);
+  }
+  return result.length;
 }
 
-async function authorizeExistsWrapper(token) {
-    return new Promise((resolve) => {
-        authorizeExists(token,(callback) => {
-            resolve(callback);
-        });
-    });
-}
-
-async function authorizeAdmin(token, callback) {
-
+async function authorizeAdmin(token) {
   var check = "select Id from Admin where Token=?";
-  var auth = -1;
-
-  pool.query(check, [token], function (error, results, fields) {
-      if (error) throw error;
-      auth = results.length;
-      callback(auth);
-  });
-
-}
-
-async function authorizeAdminWrapper(token) {
-    return new Promise((resolve) => {
-        authorizeAdmin(token,(callback) => {
-            resolve(callback);
-        });
-    });
-}
-
-async function authorizePair(targetId, userId, token, callback) {
-
-  var check = "select * from Pair where (MentorId=? and MenteeId=?) or (MentorId=? and MenteeId=?)";
-  var auth = -1;
-
-  pool.query(check, [targetId, userId, targetId, userId], function (error, results, fields) {
-      if (error) throw error;
-      auth = results.length;
-      callback(auth);
-  });
-
-  /*
-  sql.connect(config, function (err) {
-
-    if (err) console.log(err);
-
-    var request = new sql.Request();
-    request
-    .input('Token', sql.VarChar, token)
-    .input('TargetId', sql.Int, targetId)
-    .input('UserId', sql.Int, userId)
-    .query('select * from [Pair] as P join [User] as U on P.MentorId=U.Id' +
-                  ' where MentorId=@UserId and MenteeId=@TargetId and Token=@Token' +
-          ' union' +
-          ' select * from [Pair] as P join [User] as U on P.MenteeId=U.Id' +
-                  ' where MenteeId=@UserId and MentorId=@TargetId and Token=@Token', function (err, set) {
-
-      if (err) console.log(err);
-      console.log("Results: ", set);
-      if (set.recordset.length > 0) {
-        callback(true);
-      } else {
-        callback(false);
-      }
-    });
-  });
-  */
-
+  let result = await execute_async(check, [token]);
+  return result.length;
 }
 
 // Checks if user has access to information of another user. (are they paired?)
-async function authorizePairWrapper(targetId, userId, token) {
-    return new Promise((resolve) => {
-        authorizePair(targetId,userId,token,(callback) => {
-            resolve(callback);
-        });
-    });
+async function authorizePair(targetId, userId, token) {
+  var check = "select * from Pair where (MentorId=? and MenteeId=?) or (MentorId=? and MenteeId=?)";
+  var args = [targetId, userId, targetId, userId]
+  let result = await execute_async(check, args);
+  return result.length;
 }
 
 // q = query, a = query params
@@ -226,7 +136,7 @@ app.post('/admin/verify-login', async function(req, res) {
   var password = req.body.Password
   var token = req.body.Token
 
-  var check = await authorizeExistsWrapper(token);
+  var check = await authorizeExists(token);
 
   if (check) {
 
@@ -326,7 +236,7 @@ app.get('/all-appointments/:Token', async function (req, res) {
 
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
 
@@ -351,7 +261,7 @@ app.get('/appointment/upcoming/:PairId/:UserId/:Token', async function(req, res)
     res.send({success:false, undefinedValues:true})
   }
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -375,7 +285,7 @@ app.get('/appointment/past/:PairId/:UserId/:Token', async function(req, res) {
     res.send({success:false, undefinedValues:true})
   }
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -394,7 +304,7 @@ app.get('/appointment/:Id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -417,7 +327,7 @@ app.post('/create-appointment', async function(req, res) {
   var date = new Date();
   var topicId = req.body.TopicId;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -448,7 +358,7 @@ app.post('/update-appointment-status', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -471,7 +381,7 @@ app.get('/all-summaries/:Token', async function(req, res) {
 
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
 
@@ -492,7 +402,7 @@ app.get('/summary/pair/:PairId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -513,7 +423,7 @@ app.get('/summary/user/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -534,7 +444,7 @@ app.get('/summary/appointment/:AppointmentId/:UserId/:Token', async function(req
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -557,7 +467,7 @@ app.post('/create-summary', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -580,7 +490,7 @@ app.post('/update-summary', async function(req, res) {
   var token = req.body.Token;
   var date = new Date();
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -604,7 +514,7 @@ app.get('/admin/all-pairs/:Token', async function(req, res) {
   var id = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
     //var d = await execute_async('select * from User where Type=0 or Type=2', [])
@@ -634,7 +544,7 @@ app.get('/pair/:UserId/:Token', async function(req, res) {
   var id = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(id, token);
+  var check = await authorizeMatch(id, token);
 
   if (check) {
 
@@ -656,7 +566,7 @@ app.get('/pair/both/:MentorId/:MenteeId/:UserId/:Token', async function(req, res
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -677,7 +587,7 @@ app.get('/pair/mentor/:MentorId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -698,7 +608,7 @@ app.get('/pair/mentee/:MenteeId/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -723,7 +633,7 @@ app.post('/create-pair', async function(req, res) {
   var mentorPrivacyAccepted = 0;
   var menteePrivacyAccepted = 0;
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
 
@@ -803,7 +713,7 @@ app.post('/undelete-pair', async function(req, res) {
 //   var id = req.body.Id;
 //   var token = req.body.Token;
 
-//   var check = await authorizeAdminWrapper(token);
+//   var check = await authorizeAdmin(token);
 
 //   if (check) {
 
@@ -827,7 +737,7 @@ app.get('/current-topic/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -845,7 +755,7 @@ app.get('/all-topics/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -864,7 +774,7 @@ app.get('/admin/all-topics/:Token', async function(req, res) {
 
   var token = req.params.Token;
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
 
@@ -885,7 +795,7 @@ app.get('/topic/:Id/:UserId/:Token', async function(req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -912,7 +822,7 @@ app.post('/create-topic', async function(req, res) {
   var activeTopic = req.body.ActiveTopic;
   var notifyUsers = req.body.NotifyUsers;
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
   if (check) {
 
     // Update other ActiveTopic to set it as disabled if necessary.
@@ -957,7 +867,7 @@ app.post('/update-topic', async function(req, res) {
   var notifyUsers = req.body.NotifyUsers;
   var date = new Date();
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
 
@@ -994,7 +904,7 @@ app.post('/delete-topic', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
 
@@ -1021,7 +931,7 @@ app.post('/delete-topic', async function(req, res) {
 app.get('/all-users/:Token', async function (req, res) {
 
   var token = req.params.Token;
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
 
@@ -1047,20 +957,17 @@ app.get('/all-users/:Token', async function (req, res) {
 
 // GET User by Id
 app.get('/user/id/:UserId/:Token', async function(req, res) {
-
-  var userId = req.params.UserId;
-  var token = req.params.Token;
-
-  var check = await authorizeMatchWrapper(userId, token);
-
+  const userId = req.params.UserId;
+  const token = req.params.Token;
+  console.log("/user/id/:", userId, "/:", token, "\n");
+  const check = await authorizeMatch(userId, token);
   if (check) {
-
-    var data = await execute_async('select * from User where Id=?', [userId])
-    res.send(data)
-
+    console.log("/user/id/ authorized\n");
+    const data = await execute_async('select * from User where Id=?', [userId])
+    res.send(data);
   } else {
-
-    res.send({success:false})
+    console.log("/user/id/ not authorized\n");
+    res.send({success:false});
   }
 });
 
@@ -1086,17 +993,20 @@ async function fetchUsing(url, bearer, ender='') {
 app.get('/user/access/:LinkedInToken', async function (req, res)
 {
   var linkedInToken = req.params.LinkedInToken;
-
   console.log('linkedInToken:',linkedInToken);
-
   const emailPayload = await fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', linkedInToken);
-
   console.log('emailPayload:',emailPayload);
-  var email = emailPayload.elements[0]["handle~"].emailAddress;
+  const email = emailPayload.elements[0]["handle~"].emailAddress;
   console.log('email:',email)
 
   // Check to see if LinkedIn returned a valid email.
   if (email != undefined && email.length > 0) {
+
+    const infoPayload = await fetchUsing('https://api.linkedin.com/v2/me', linkedInToken);
+    const picturePayload = await fetchUsing('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token=', null, linkedInToken);
+    const first = infoPayload.localizedFirstName;
+    const last = infoPayload.localizedLastName;
+    const pic = picturePayload.profilePicture["displayImage~"].elements[2].identifiers[0].identifier;
 
     // Check if user exists.
     var userCheck = await execute_async('select Id from User where Email=?', [email])
@@ -1104,23 +1014,19 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
     if (userCheck.length == 0) {
       // Create new user.
       console.log("User does not exist");
-      await initializeNewUser(email, newToken);
+      await initializeNewUser(email, newToken, first, last, pic);
     } else {
       // Generate a new token for this session.
+      console.log("User exists");
       await execute_async('update User set Token=? where Email=?', [newToken, email]);
     }
-
     // Get user with new token, as they should exist now.
     var data = await execute_async('select Id,Token from User where Email=?', [email]);
-
     console.log("Token should exist...", data);
     res.send(data);
-
   } else {
-
     console.log("No valid email...");
     res.send({success:false});
-
   }
 });
 
@@ -1131,7 +1037,7 @@ app.get('/user/other/:TargetId/:UserId/:Token', async function (req, res) {
   var userId = req.params.UserId;
   var token = req.params.Token;
 
-  var check = await authorizePairWrapper(targetId, userId, token);
+  var check = await authorizePair(targetId, userId, token);
 
   if (check) {
 
@@ -1152,7 +1058,7 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
   var email = req.params.Email;
   var token = req.params.Token;
 
-  var check = await authorizeExistsWrapper(token);
+  var check = await authorizeExists(token);
 
   if (check) {
 
@@ -1167,20 +1073,22 @@ app.get('/user-via-email/:Email/:Token', async function(req, res) {
 
 });
 
-async function initializeNewUser(email, newToken) {
-  var date = new Date()
+async function initializeNewUser(email, newToken, first="", last="", pic="") {
+  var date = new Date();
   var filler = "";
   var components = {
-    Email:        email,
-    FirstName:    filler,
-    LastName:     filler,
-    Avatar:     filler,
-    ExpoPushToken:     filler,
-    Token: newToken,
-  }
-  console.log('insert components:',components)
+    Email:            email,
+    FirstName:        first,
+    LastName:         last,
+    Avatar:           pic,
+    ExpoPushToken:    filler,
+    Token:            newToken,
+    Created:          date,
+    LastUpdate:       date,
+  };
+  console.log('insert components:', components)
   var inserted = await execute_async('insert into User set ?', components);
-  console.log('inserted:',inserted)
+  console.log('inserted:', inserted)
   return
 }
 
@@ -1199,7 +1107,7 @@ app.post('/create-user', async function(req, res) {
   };
   var token = req.body.Token;
 
-  var check = await authorizeExistsWrapper(token);
+  var check = await authorizeExists(token);
   if (check) {
     if (await execute_async('select Email from User where Email=?', [components.Email]).length > 0) {
       var update = await execute_async('update User set ? where Email=?', [components, components.Email]);
@@ -1221,7 +1129,7 @@ app.post('/update-privacy', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -1243,7 +1151,7 @@ app.post('/update-expo-push-token', async function(req, res) {
   var userId = req.body.UserId;
   var token = req.body.Token;
 
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -1264,7 +1172,7 @@ app.post('/update-approved', async function(req, res) {
   var approved = req.body.Approved;
   var token = req.body.Token;
   var userId = req.body.UserId;
-  var check = await authorizeMatchWrapper(userId, token);
+  var check = await authorizeMatch(userId, token);
 
   if (check) {
 
@@ -1284,7 +1192,7 @@ app.post('/delete-user', async function(req, res) {
   var id = req.body.Id;
   var token = req.body.Token;
 
-  var check = await authorizeAdminWrapper(token);
+  var check = await authorizeAdmin(token);
 
   if (check) {
 
