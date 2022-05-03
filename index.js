@@ -21,6 +21,9 @@ app.use(cors());
 
 var router = express.Router();
 
+// Static directories.
+app.use('/dash', express.static('dash'));
+
 app.use('/api', router);
 
 // SQL configuration.
