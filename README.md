@@ -21,6 +21,13 @@ You can read more on the PM2 Guide site: https://pm2.keymetrics.io/docs/usage/qu
 
 What's important is you preface the command with `sudo PM2_HOME=/etc/pm2daemon` to manage PM2 from a global perspective. Otherwise, you will be managing PM2 processed from a user perspective.
 
+# Building the Dashboard Website
+1. Clone the repo in a local directory on the mentors server: https://github.com/cappycap/MentoringDashboard
+2. Set up this bash file in your home directory:
+```
+
+```
+
 # MentoringAPI Documentation
 Below is detailed information on accessing or posting data to the API, broken up by database table.
 
