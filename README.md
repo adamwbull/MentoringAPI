@@ -1,3 +1,17 @@
+# Use Cases
+Small guides for how to accomplish certain tasks.
+
+## Reset user password using MYSQL.
+Using this guide you can update a password through the Ubuntu box.
+1. Connect to WWU-Secure or using Cisco AnyConnect VPN.
+2. Follow traditional CSCI guide to get onto a linux machine. 
+3. Connect to the mentors box with a sudo user (currently 172.30.142.72:922 as of this writing)
+4. Type `sudo mysql -u root` to start mysql.
+5. Type `use mentors;` to switch to the mentors table.
+6. Check out `select * from Admin;` and you will see admins have sha256 passwords.
+7. Generate a sha string for a given password on a site like https://emn178.github.io/online-tools/sha256.html. 
+8. Run the following command for the Admin you'd like to update the password for: `update Admin set Password='<sha256>' where Id=?;`
+
 # MentoringAPI Documentation
 Below is detailed information on accessing or posting data to the API, broken up by database table.
 
