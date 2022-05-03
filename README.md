@@ -12,6 +12,15 @@ Using this guide you can update a password through the Ubuntu box.
 7. Generate a sha string for a given password on a site like https://emn178.github.io/online-tools/sha256.html. 
 8. Run the following command for the Admin you'd like to update the password for: `update Admin set Password='<sha256>' where Id=?;`
 
+# PM2 Daemon Management
+The API is ran using PM2 globally on the box. Here are some commands you can run as a user:
+1. `sudo PM2_HOME=/etc/pm2daemon pm2 status` - View all running processes.
+2. `sudo PM2_HOME=/etc/pm2daemon pm2 restart index` - Restart the API node process.
+
+You can read more on the PM2 Guide site: https://pm2.keymetrics.io/docs/usage/quick-start/
+
+What's important is you preface the command with `sudo PM2_HOME=/etc/pm2daemon` to manage PM2 from a global perspective. Otherwise, you will be managing PM2 processed from a user perspective.
+
 # MentoringAPI Documentation
 Below is detailed information on accessing or posting data to the API, broken up by database table.
 
