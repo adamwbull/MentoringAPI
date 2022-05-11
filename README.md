@@ -49,6 +49,18 @@ sudo cp -r . /var/www/mentorsapp.cs.wwu.edu/dash
 cd ~
 ```
 
+## Deleting pairs using MYSQL.
+Can single delete or batch delete pairs as needed
+All pairs that are marked for deletion will have a type value of 2.
+1. Connect to WWU-Secure or using Cisco AnyConnect VPN.
+2. Follow traditional CSCI guide to get onto a linux machine. 
+3. Connect to the mentors box with a sudo user (currently 172.30.142.72:922 as of this writing)
+4. Type `sudo mysql -u root` to start mysql.
+5. Type `use mentors;` to switch to the mentors table.
+6A) Delete all pairs that are marked for deletion: `delete * from Pair where Type=2;`
+6B) List all pairs that are marked for deletion: `select * from Pair where Type=2;`
+7B) Delete a specific pair, obtain the deletion target's Id then: `delete from Pair where Id='?';`
+
 # MentoringAPI Documentation
 Below is detailed information on accessing or posting data to the API, broken up by database table.
 
