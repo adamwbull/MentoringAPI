@@ -3,7 +3,7 @@ Small guides for how to accomplish certain tasks.
 
 ## Journey Map
 Blue is administrative dashboard, green is user mobile application.
-![Customer Journey Map](https://github.com/cappycap/MentoringAPI/blob/main/cjm.png?raw=true)
+![Customer Journey Map](https://github.com/cappycap/MentoringAPI/blob/mysql-implementation/cjm.png?raw=true)
 
 ## Reset user password using MYSQL.
 Using this guide you can update a password through the Ubuntu box.
