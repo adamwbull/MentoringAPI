@@ -1,6 +1,10 @@
 # Use Cases
 Small guides for how to accomplish certain tasks.
 
+## Journey Map
+Blue is administrative dashboard, green is user mobile application.
+![Customer Journey Map](https://github.com/cappycap/MentoringAPI/blob/main/cjm.png?raw=true)
+
 ## Reset user password using MYSQL.
 Using this guide you can update a password through the Ubuntu box.
 1. Connect to WWU-Secure or using Cisco AnyConnect VPN.
@@ -21,11 +25,28 @@ You can read more on the PM2 Guide site: https://pm2.keymetrics.io/docs/usage/qu
 
 What's important is you preface the command with `sudo PM2_HOME=/etc/pm2daemon` to manage PM2 from a global perspective. Otherwise, you will be managing PM2 processed from a user perspective.
 
+# Rebuilding the API
+Set up this bash file in your home directory:
+```
+cd /var/www/mentorsapp.cs.wwu.edu/api
+git stash
+git pull
+sudo PM2_HOME=/etc/pm2daemon pm2 restart index
+cd ~
+```
+
 # Building the Dashboard Website
 1. Clone the repo in a local directory on the mentors server: https://github.com/cappycap/MentoringDashboard
 2. Set up this bash file in your home directory:
 ```
-
+sudo rm -r /var/www/mentorsapp.cs.wwu.edu/dash
+sudo mkdir /var/www/mentorsapp.cs.wwu.edu/dash
+cd MentoringDashboard
+git pull https://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@github.com/cappycap/MentoringDashboard.git
+expo build:web
+cd web-build
+sudo cp -r . /var/www/mentorsapp.cs.wwu.edu/dash
+cd ~
 ```
 
 # MentoringAPI Documentation
