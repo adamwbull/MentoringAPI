@@ -1,9 +1,36 @@
+# Table of Contents
+1. [Use Cases](#use)
+   - [Journey Map](#jou)
+   - [MYSQL](#mys)
+      - [Reset user password using MYSQL](#mys1)
+      - [Deleting pairs using MYSQL](#mys2)
+   - [Building and Deployment](#bui)
+      - [PM2 Daemon Management](#bui1)
+      - [Rebuilding the API](#bui2)
+      - [Building the Dashboard Website](#bui3)
+2. [Mentoring API Documentation](#doc)
+	 - [Verify](#ver)
+   - [Admin](#adm)
+   - [Appointment](#app)
+   - [Appointment Summary](#aps)
+   - [Pair](#pai)
+   - [Topic](#top)
+   - [User](#usr)
+
+<a name="use"/>
+
 # Use Cases
-Small guides for how to accomplish certain tasks.
+  Small guides for how to accomplish certain tasks.
+
+<a name="jou"/>
 
 ## Journey Map
 Blue is administrative dashboard, green is user mobile application.
 ![Customer Journey Map](https://github.com/cappycap/MentoringAPI/blob/mysql-implementation/cjm.png?raw=true)
+
+<a name="mys"/>
+
+<a name="mys1"/>
 
 ## Reset user password using MYSQL.
 Using this guide you can update a password through the Ubuntu box.
@@ -16,6 +43,24 @@ Using this guide you can update a password through the Ubuntu box.
 7. Generate a sha string for a given password on a site like https://emn178.github.io/online-tools/sha256.html. 
 8. Run the following command for the Admin you'd like to update the password for: `update Admin set Password='<sha256>' where Id=?;`
 
+<a name="mys2"/>
+
+## Deleting pairs using MYSQL.
+Can single delete or batch delete pairs as needed
+All pairs that are marked for deletion will have a type value of 2.
+1. Connect to WWU-Secure or using Cisco AnyConnect VPN.
+2. Follow traditional CSCI guide to get onto a linux machine. 
+3. Connect to the mentors box with a sudo user (currently 172.30.142.72:922 as of this writing)
+4. Type `sudo mysql -u root` to start mysql.
+5. Type `use mentors;` to switch to the mentors table.
+6A) Delete all pairs that are marked for deletion: `delete * from Pair where Type=2;`
+6B) List all pairs that are marked for deletion: `select * from Pair where Type=2;`
+7B) Delete a specific pair, obtain the deletion target's Id then: `delete from Pair where Id='?';`
+
+<a name="bui"/>
+
+<a name="bui1"/>
+
 # PM2 Daemon Management
 The API is ran using PM2 globally on the box. Here are some commands you can run as a user:
 1. `sudo PM2_HOME=/etc/pm2daemon pm2 status` - View all running processes.
@@ -24,6 +69,8 @@ The API is ran using PM2 globally on the box. Here are some commands you can run
 You can read more on the PM2 Guide site: https://pm2.keymetrics.io/docs/usage/quick-start/
 
 What's important is you preface the command with `sudo PM2_HOME=/etc/pm2daemon` to manage PM2 from a global perspective. Otherwise, you will be managing PM2 processed from a user perspective.
+
+<a name="bui2"/>
 
 # Rebuilding the API
 Set up this bash file in your home directory:
@@ -34,6 +81,8 @@ git pull
 sudo PM2_HOME=/etc/pm2daemon pm2 restart index
 cd ~
 ```
+
+<a name="bui3"/>
 
 # Building the Dashboard Website
 1. Clone the repo in a local directory on the mentors server: https://github.com/cappycap/MentoringDashboard
@@ -49,17 +98,7 @@ sudo cp -r . /var/www/mentorsapp.cs.wwu.edu/dash
 cd ~
 ```
 
-## Deleting pairs using MYSQL.
-Can single delete or batch delete pairs as needed
-All pairs that are marked for deletion will have a type value of 2.
-1. Connect to WWU-Secure or using Cisco AnyConnect VPN.
-2. Follow traditional CSCI guide to get onto a linux machine. 
-3. Connect to the mentors box with a sudo user (currently 172.30.142.72:922 as of this writing)
-4. Type `sudo mysql -u root` to start mysql.
-5. Type `use mentors;` to switch to the mentors table.
-6A) Delete all pairs that are marked for deletion: `delete * from Pair where Type=2;`
-6B) List all pairs that are marked for deletion: `select * from Pair where Type=2;`
-7B) Delete a specific pair, obtain the deletion target's Id then: `delete from Pair where Id='?';`
+<a name="doc"/>
 
 # MentoringAPI Documentation
 Below is detailed information on accessing or posting data to the API, broken up by database table.
@@ -70,12 +109,16 @@ If a route is bolded in the sections below, it has been implemented. Italics are
 
 *PLEASE NOTE*: Endpoints with "admin" in the URL or description will require a token or token/id pair from the Admin table.
 
+<a name="ver"/>
+
 ## Verify Table
 A table containing keys used to make API calls.
 
 ### Verify Structure
 * Id (PK, int)
 * Token (nvarchar(MAX))
+
+<a name="adm"/>
 
 ## Admin Table
 A table containing admin users that can access the dashboard.
@@ -98,6 +141,8 @@ A table containing admin users that can access the dashboard.
 */admin/mark-users-for-deletion* - Provide Ids Array (For Users), Token, Password (for Admin).
 
 */admin/unmark-users-for-deletion* - Provide Ids Array (For Users), Token, Password (for Admin).
+
+<a name="app"/>
 
 ## Appointment Table
 A table containing appointments scheduled between a mentor/mentee pair.
@@ -124,6 +169,8 @@ A table containing appointments scheduled between a mentor/mentee pair.
 */create-appointment* - Provide PairId, ScheduledAt, TopicId, UserId, Token.
 
 */update-appointment-status* - Provide Id, Status, UserId, Token.
+
+<a name="aps"/>
 
 ## AppointmentSummary Table
 A table containing summaries written for a particular appointment by a certain user.
@@ -153,6 +200,8 @@ A table containing summaries written for a particular appointment by a certain u
 
 */delete-summary* - Provide AppointmentId, UserId, Token.
 
+<a name="pai"/>
+
 ## Pair Table
 A table containing mentor/mentee pairs.
 
@@ -179,6 +228,8 @@ A table containing mentor/mentee pairs.
 */create-pair* - Provide MentorId, MenteeId, admin Token.
 
 */delete-pair* - Provide Id, admin Token.
+
+<a name="top"/>
 
 ## Topic Table
 A table containing topics for meeting discussions.
@@ -209,6 +260,8 @@ A table containing topics for meeting discussions.
 */update-topic* - Provide Id, PostedBy, DueDate, Title, Description, ActiveTopic.
 
 */delete-topic* - Provide Id.
+
+<a name="usr"/>
 
 ## User Table
 A table containing user profile information.
