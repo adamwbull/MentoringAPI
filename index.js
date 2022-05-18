@@ -1002,6 +1002,8 @@ app.get('/user/access/:LinkedInToken', async function (req, res)
 
     const infoPayload = await fetchUsing('https://api.linkedin.com/v2/me', linkedInToken);
     const picturePayload = await fetchUsing('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token=', null, linkedInToken);
+    console.log('infoPayload:',infoPayload)
+    console.log('picturePayload:',picturePayload)
     const first = infoPayload.localizedFirstName;
     const last = infoPayload.localizedLastName;
     const pic = picturePayload.profilePicture["displayImage~"].elements[2].identifiers[0].identifier;
