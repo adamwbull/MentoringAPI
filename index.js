@@ -1218,7 +1218,7 @@ app.get('/contact-self/:TargetId/:UserId/:Token', async function(req, res) {
   var check = await authorizeMatch(userId, token);
   if (check) {
 
-    var data = await execute_async('select Email from User where UserId=?', [userId]);
+    var data = await execute_async('select Email from User where Id=?', [userId]);
     res.send(data);
 
   } else {
@@ -1237,7 +1237,7 @@ app.get('/contact-other/:TargetId/:UserId/:Token', async function(req, res) {
   var check = await authorizePair(targetId, userId, token);
   if (check) {
 
-    var data = await execute_async('select Email from User where UserId=?', [targetId]);
+    var data = await execute_async('select Email from User where Id=?', [targetId]);
     res.send(data);
 
   } else {
