@@ -301,3 +301,84 @@ A table containing user profile information.
 */update-approved* - Provide Email, Approved, UserId, Token.
 
 */mark-user-for-deletion* - Provide Id, Token.
+
+Code for creating tables:
+```sql
+-- Verify Table
+CREATE TABLE Verify (
+    Id INT PRIMARY KEY,
+    Token TEXT
+);
+
+-- Admin Table
+CREATE TABLE Admin (
+    Id INT PRIMARY KEY,
+    Email TEXT,
+    Password TEXT,
+    FirstName TEXT,
+    LastName TEXT,
+    Token TEXT
+);
+
+-- Appointment Table
+CREATE TABLE Appointment (
+    Id INT PRIMARY KEY,
+    PairId INT,
+    TopicId INT,
+    ScheduledAt DATETIME,
+    Status VARCHAR(12),
+    Created DATETIME,
+    LastUpdate DATETIME
+);
+
+-- AppointmentSummary Table
+CREATE TABLE AppointmentSummary (
+    Id INT PRIMARY KEY,
+    AppointmentId INT,
+    SummaryText TEXT,
+    UserId INT,
+    Status VARCHAR(10),
+    Created DATETIME,
+    LastUpdate DATETIME
+);
+
+-- Pair Table
+CREATE TABLE Pair (
+    Id INT PRIMARY KEY,
+    MentorId INT,
+    MenteeId INT,
+    Created DATETIME,
+    LastUpdate DATETIME,
+    PrivacyAccepted INT
+);
+
+-- Topic Table
+CREATE TABLE Topic (
+    Id INT PRIMARY KEY,
+    PostedBy INT,
+    DueDate DATETIME,
+    Title TEXT,
+    Description TEXT,
+    Created DATETIME,
+    LastUpdate DATETIME,
+    ActiveTopic INT,
+    Archived INT
+);
+
+-- User Table
+CREATE TABLE User (
+    Id INT PRIMARY KEY,
+    Token VARCHAR(64),
+    Email VARCHAR(255),
+    FirstName VARCHAR(30),
+    LastName VARCHAR(30),
+    Avatar VARCHAR(255),
+    ExpoPushToken TEXT,
+    Created DATETIME,
+    LastUpdate DATETIME,
+    PrivacyAccepted INT,
+    Approved INT,
+    Type INT
+);
+
+```
